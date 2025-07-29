@@ -1,6 +1,8 @@
 import 'package:exfactor/models/user_model.dart';
 import 'package:exfactor/screens/admin/admin_manage_project&TaskScreen.dart';
 import 'package:exfactor/screens/admin/admin_manage_users.dart';
+import 'package:exfactor/screens/admin/admin_sale_screen.dart';
+import 'package:exfactor/screens/login_page.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/common/base_layout.dart';
 import 'admin_home.dart';
@@ -20,27 +22,53 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
 
   final List<Widget> _screens = [
     const AdminHome(),
+    const AdminSaleScreen(),
     const AdminProjectManage(),
     const AdminNotificationScreen(),
     const MangeUsers(),
   ];
 
+  // Method to handle navigation between tabs
+  void _navigateToTab(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  // Updated screens list with navigation callback
+  List<Widget> get _screensWithNavigation => [
+        AdminHome(onNavigateToTab: _navigateToTab),
+        const AdminSaleScreen(),
+        const AdminProjectManage(),
+        const AdminNotificationScreen(),
+        const MangeUsers(),
+      ];
+
   final List<BottomNavigationBarItem> _navigationItems = const [
     BottomNavigationBarItem(
-      icon: Icon(Icons.home),
+      icon: Icon(Icons.home_outlined),
+      activeIcon: Icon(Icons.home),
       label: 'Home',
     ),
     BottomNavigationBarItem(
-      icon: Icon(Icons.checklist),
+      icon: Icon(Icons.track_changes_outlined),
+      activeIcon: Icon(Icons.track_changes),
+      label: 'Sales',
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.assignment_outlined),
+      activeIcon: Icon(Icons.assignment),
       label: 'Tasks',
     ),
     BottomNavigationBarItem(
-      icon: Icon(Icons.notifications),
-      label: 'Notifications',
+      icon: Icon(Icons.event_outlined),
+      activeIcon: Icon(Icons.event),
+      label: 'Events',
     ),
     BottomNavigationBarItem(
-      icon: Icon(Icons.supervised_user_circle),
-      label: 'Manage',
+      icon: Icon(Icons.person_outline),
+      activeIcon: Icon(Icons.person),
+      label: 'Profile',
     ),
   ];
 
@@ -48,16 +76,45 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
     switch (_currentIndex) {
       case 1:
         return const CustomAppBarWithIcon(
-            title: 'Manage Projects', icon: Icons.list_alt);
+            title: 'Sales', icon: Icons.track_changes);
       case 2:
         return const CustomAppBarWithIcon(
-            title: 'Manage Notifications', icon: Icons.notifications_active);
+            title: 'Projects', icon: Icons.list_alt);
       case 3:
         return const CustomAppBarWithIcon(
-            title: 'Manage Users', icon: Icons.account_circle);
+            title: 'Events', icon: Icons.notifications_active);
+      case 4:
+        return const CustomAppBarWithIcon(
+            title: 'Members', icon: Icons.account_circle);
       default:
         return null;
     }
+  }
+
+  void _handleLogout() {
+    // Show confirmation dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Logout'),
+          content: const Text('Are you sure you want to logout?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                handleLogout(context);
+              },
+              child: const Text('Logout'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -66,12 +123,16 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
       title: "${widget.user.firstName ?? ''}",
       subtitle: "${widget.user.position ?? ''}",
       profileImage: "${widget.user.profileImage ?? ''}",
-      onProfileTap: () {},
-      body: _screens[_currentIndex],
+      onProfileTap: () {
+        // Handle profile tap - you can navigate to profile screen
+        print('Profile tapped');
+      },
+      body: _screensWithNavigation[_currentIndex],
       currentIndex: _currentIndex,
       onIndexChanged: (index) => setState(() => _currentIndex = index),
       navigationItems: _navigationItems,
       customAppBar: _getCustomAppBar(),
+      onLogout: _handleLogout,
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:exfactor/screens/admin/admin_main_screen.dart';
 import 'package:exfactor/screens/supervisor/supervisor_main_screen.dart';
 import 'package:exfactor/screens/technical/technical_main_screen.dart';
+import 'package:exfactor/utils/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:exfactor/services/superbase_service.dart';
@@ -312,7 +313,7 @@ class _LoginPageState extends State<LoginPage> {
                       child: ElevatedButton(
                         onPressed: _handleLogin,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF001F54),
+                          backgroundColor: primaryColor,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),

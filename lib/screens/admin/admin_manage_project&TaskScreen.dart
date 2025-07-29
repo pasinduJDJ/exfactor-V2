@@ -19,14 +19,14 @@ class AdminProjectManage extends StatefulWidget {
 
 class _AdminProjectManageState extends State<AdminProjectManage> {
   List<Map<String, dynamic>> statusProjectOverview = [
-    {'label': 'PENDING', 'count': 0, 'color': cardDarkYellow},
-    {'label': 'ON PROGRESS', 'count': 0, 'color': cardDarkGreen},
-    {'label': 'OVER DUE', 'count': 0, 'color': cardDarkRed},
+    {'label': 'PENDING', 'count': 0, 'color': kWhite},
+    {'label': 'ON PROGRESS', 'count': 0, 'color': kWhite},
+    {'label': 'OVER DUE', 'count': 0, 'color': cardRed},
   ];
   List<Map<String, dynamic>> statusTaskOverView = [
-    {'label': 'PENDING', 'count': 0, 'color': cardDarkYellow},
-    {'label': 'ON PROGRESS', 'count': 0, 'color': cardDarkGreen},
-    {'label': 'OVER DUE', 'count': 0, 'color': cardDarkRed},
+    {'label': 'PENDING', 'count': 0, 'color': kWhite},
+    {'label': 'ON PROGRESS', 'count': 0, 'color': kWhite},
+    {'label': 'OVER DUE', 'count': 0, 'color': cardRed},
   ];
 
   // Separate expand/collapse state for projects
@@ -102,9 +102,9 @@ class _AdminProjectManageState extends State<AdminProjectManage> {
     }
     setState(() {
       statusProjectOverview = [
-        {'label': 'PENDING', 'count': pending, 'color': cardDarkYellow},
-        {'label': 'WORKING', 'count': onProgress, 'color': cardDarkGreen},
-        {'label': 'OVER DUE', 'count': overdue, 'color': cardDarkRed},
+        {'label': 'PENDING', 'count': pending, 'color': kWhite},
+        {'label': 'WORKING', 'count': onProgress, 'color': kWhite},
+        {'label': 'OVER DUE', 'count': overdue, 'color': cardRed},
         // Optionally add complete count here if you want to show it in the UI
         // {'label': 'COMPLETE', 'count': complete, 'color': Colors.blue},
       ];
@@ -148,8 +148,8 @@ class _AdminProjectManageState extends State<AdminProjectManage> {
     }
     setState(() {
       statusTaskOverView = [
-        {'label': 'PENDING', 'count': pending, 'color': Colors.amber},
-        {'label': 'WORKING', 'count': onProgress, 'color': cardGreen},
+        {'label': 'PENDING', 'count': pending, 'color': kWhite},
+        {'label': 'WORKING', 'count': onProgress, 'color': kWhite},
         {'label': 'OVER DUE', 'count': overdue, 'color': cardRed},
         // Optionally add complete count here if you want to show it in the UI
         // {'label': 'COMPLETE', 'count': complete, 'color': Colors.blue},
@@ -252,353 +252,358 @@ class _AdminProjectManageState extends State<AdminProjectManage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        backgroundColor: backgroundColor,
         body: SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 15),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          const SizedBox(
-            height: 20,
-          ),
-          // 1st row Summerize Project Overview
-          Container(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text("Project OverView ",
-                    style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(
-                  height: 5,
+          padding: EdgeInsets.symmetric(horizontal: 15),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              const SizedBox(
+                height: 20,
+              ),
+              // 1st row Summerize Project Overview
+              Container(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("Project OverView ",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16)),
+                    const SizedBox(
+                      height: 5,
+                    ),
+                    isLoadingProjectOverview
+                        ? const Center(child: CircularProgressIndicator())
+                        : UserUtils.buildStatusSummaryCard(
+                            statusProjectOverview,
+                            onTap: (index) {
+                              // 0: Pending, 1: Working, 2: Over Due
+                              String categoryTitle =
+                                  statusProjectOverview[index]['label'];
+                              List<Map<String, dynamic>> projectList;
+                              if (index == 0) {
+                                projectList = pendingProjects;
+                              } else if (index == 1) {
+                                projectList = inProgressProjects;
+                              } else {
+                                projectList = overdueProjects;
+                              }
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ProjectScreen(
+                                    categoryTitle: categoryTitle,
+                                    projectList: projectList,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ],
                 ),
-                isLoadingProjectOverview
-                    ? const Center(child: CircularProgressIndicator())
-                    : UserUtils.buildStatusSummaryCard(
-                        statusProjectOverview,
-                        onTap: (index) {
-                          // 0: Pending, 1: Working, 2: Over Due
-                          String categoryTitle =
-                              statusProjectOverview[index]['label'];
-                          List<Map<String, dynamic>> projectList;
-                          if (index == 0) {
-                            projectList = pendingProjects;
-                          } else if (index == 1) {
-                            projectList = inProgressProjects;
-                          } else {
-                            projectList = overdueProjects;
-                          }
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ProjectScreen(
-                                categoryTitle: categoryTitle,
-                                projectList: projectList,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-              ],
-            ),
-          ),
-          const SizedBox(
-            height: 20,
-          ),
-          // 2nd Row Summerize Task Overview
-          Container(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text("Task OverView ",
-                    style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(
-                  height: 5,
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              // 2nd Row Summerize Task Overview
+              Container(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("Task OverView ",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16)),
+                    const SizedBox(
+                      height: 5,
+                    ),
+                    isLoadingTaskOverview
+                        ? const Center(child: CircularProgressIndicator())
+                        : UserUtils.buildStatusSummaryCard(
+                            statusTaskOverView,
+                            onTap: (index) {
+                              // 0: Pending, 1: Working, 2: Over Due
+                              String categoryTitle =
+                                  statusTaskOverView[index]['label'];
+                              List<Map<String, dynamic>> taskList;
+                              if (index == 0) {
+                                taskList = pendingTasks;
+                              } else if (index == 1) {
+                                taskList = inProgressTasks;
+                              } else {
+                                taskList = overdueTasks;
+                              }
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => TaskScreen(
+                                    categoryTitle: categoryTitle,
+                                    taskList: taskList,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ],
                 ),
-                isLoadingTaskOverview
-                    ? const Center(child: CircularProgressIndicator())
-                    : UserUtils.buildStatusSummaryCard(
-                        statusTaskOverView,
-                        onTap: (index) {
-                          // 0: Pending, 1: Working, 2: Over Due
-                          String categoryTitle =
-                              statusTaskOverView[index]['label'];
-                          List<Map<String, dynamic>> taskList;
-                          if (index == 0) {
-                            taskList = pendingTasks;
-                          } else if (index == 1) {
-                            taskList = inProgressTasks;
-                          } else {
-                            taskList = overdueTasks;
-                          }
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => TaskScreen(
-                                categoryTitle: categoryTitle,
-                                taskList: taskList,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-              ],
-            ),
-          ),
+              ),
 
-          const SizedBox(
-            height: 20,
-          ),
-          const Text("Manage Projects",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(
-            height: 10,
-          ),
-          CustomButton(
-            text: "Add New Project",
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => AdminAddProjectScreen()),
-              );
+              const SizedBox(
+                height: 20,
+              ),
+              const Text("Manage Projects",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(
+                height: 10,
+              ),
+              CustomButton(
+                text: "Add New Project",
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => AdminAddProjectScreen()),
+                  );
 
-              if (result == 'project_added') {
-                // Refresh all project and task data with proper state management
-                setState(() {
-                  isLoadingProjectOverview = true;
-                  isLoadingTaskOverview = true;
-                  isLoadingProjectList = true;
-                  isLoadingTaskList = true;
-                });
+                  if (result == 'project_added') {
+                    // Refresh all project and task data with proper state management
+                    setState(() {
+                      isLoadingProjectOverview = true;
+                      isLoadingTaskOverview = true;
+                      isLoadingProjectList = true;
+                      isLoadingTaskList = true;
+                    });
 
-                // Refresh all data
-                await fetchProjectOverview();
-                await fetchTaskOverview();
-                await fetchProjectLists();
-                await fetchTasksLists();
-              }
-            },
-            width: double.infinity,
-            backgroundColor: kPrimaryColor,
-            icon: const Icon(Icons.task_alt),
-          ),
-          const SizedBox(
-            height: 10,
-          ),
-          // In Progress Project Table list  Start
-          UserUtils.buildExpandableGroup(
-            title: "In Progress Project",
-            color: cardDarkGreen,
-            expanded: showProjectProgress,
-            onToggle: () =>
-                setState(() => showProjectProgress = !showProjectProgress),
-            groupList: inProgressProjects,
-            onSeeMore: (project) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AdminSingleProjectScreen(
-                      projectId: project['project_id']?.toString() ?? ''),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 10),
-          // Overdue Project Table list  Start
-          UserUtils.buildExpandableGroup(
-            title: "Overdue Project",
-            color: cardRed,
-            expanded: showProjectOverdue,
-            onToggle: () =>
-                setState(() => showProjectOverdue = !showProjectOverdue),
-            groupList: overdueProjects,
-            onSeeMore: (project) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AdminSingleProjectScreen(
-                      projectId: project['project_id']?.toString() ?? ''),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 10),
-          // Pending Project Table list  Start
-          UserUtils.buildExpandableGroup(
-            title: "Pending Project",
-            color: cardDarkYellow,
-            expanded: showProjectPending,
-            onToggle: () =>
-                setState(() => showProjectPending = !showProjectPending),
-            groupList: pendingProjects,
-            onSeeMore: (project) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AdminSingleProjectScreen(
-                      projectId: project['project_id']?.toString() ?? ''),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 10),
-          // Complete Project Table list Start
-          UserUtils.buildExpandableGroup(
-            title: "Complete Project",
-            color: Colors.blue,
-            expanded: showProjectComplete,
-            onToggle: () =>
-                setState(() => showProjectComplete = !showProjectComplete),
-            groupList: completeProjects,
-            onSeeMore: (project) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AdminSingleProjectScreen(
-                      projectId: project['project_id']?.toString() ?? ''),
-                ),
-              );
-            },
-          ),
-          // Archived Project Table list Start
-          UserUtils.buildExpandableGroup(
-            title: "Archived Project",
-            color: Colors.grey,
-            expanded: showProjectArchived,
-            onToggle: () =>
-                setState(() => showProjectArchived = !showProjectArchived),
-            groupList: archivedProjects,
-            onSeeMore: (project) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AdminSingleProjectScreen(
-                      projectId: project['project_id']?.toString() ?? ''),
-                ),
-              );
-            },
-          ),
-          //mange Tasks
-          const SizedBox(
-            height: 20,
-          ),
-          const Text("Manage Tasks",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(
-            height: 20,
-          ),
-          CustomButton(
-            text: "Add New Tasks",
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => AdminAddTaskScreen()),
-              );
+                    // Refresh all data
+                    await fetchProjectOverview();
+                    await fetchTaskOverview();
+                    await fetchProjectLists();
+                    await fetchTasksLists();
+                  }
+                },
+                width: double.infinity,
+                backgroundColor: kPrimaryColor,
+                icon: const Icon(Icons.task_alt),
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              // In Progress Project Table list  Start
+              UserUtils.buildExpandableGroup(
+                title: "In Progress Project",
+                color: cardDarkGreen,
+                expanded: showProjectProgress,
+                onToggle: () =>
+                    setState(() => showProjectProgress = !showProjectProgress),
+                groupList: inProgressProjects,
+                onSeeMore: (project) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AdminSingleProjectScreen(
+                          projectId: project['project_id']?.toString() ?? ''),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 10),
+              // Overdue Project Table list  Start
+              UserUtils.buildExpandableGroup(
+                title: "Overdue Project",
+                color: cardRed,
+                expanded: showProjectOverdue,
+                onToggle: () =>
+                    setState(() => showProjectOverdue = !showProjectOverdue),
+                groupList: overdueProjects,
+                onSeeMore: (project) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AdminSingleProjectScreen(
+                          projectId: project['project_id']?.toString() ?? ''),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 10),
+              // Pending Project Table list  Start
+              UserUtils.buildExpandableGroup(
+                title: "Pending Project",
+                color: cardDarkYellow,
+                expanded: showProjectPending,
+                onToggle: () =>
+                    setState(() => showProjectPending = !showProjectPending),
+                groupList: pendingProjects,
+                onSeeMore: (project) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AdminSingleProjectScreen(
+                          projectId: project['project_id']?.toString() ?? ''),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 10),
+              // Complete Project Table list Start
+              UserUtils.buildExpandableGroup(
+                title: "Complete Project",
+                color: Colors.blue,
+                expanded: showProjectComplete,
+                onToggle: () =>
+                    setState(() => showProjectComplete = !showProjectComplete),
+                groupList: completeProjects,
+                onSeeMore: (project) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AdminSingleProjectScreen(
+                          projectId: project['project_id']?.toString() ?? ''),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 10),
+              // Archived Project Table list Start
+              UserUtils.buildExpandableGroup(
+                title: "Archived Project",
+                color: Colors.grey,
+                expanded: showProjectArchived,
+                onToggle: () =>
+                    setState(() => showProjectArchived = !showProjectArchived),
+                groupList: archivedProjects,
+                onSeeMore: (project) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AdminSingleProjectScreen(
+                          projectId: project['project_id']?.toString() ?? ''),
+                    ),
+                  );
+                },
+              ),
+              //mange Tasks
+              const SizedBox(
+                height: 20,
+              ),
+              const Text("Manage Tasks",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(
+                height: 20,
+              ),
+              CustomButton(
+                text: "Add New Tasks",
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => AdminAddTaskScreen()),
+                  );
 
-              if (result == 'task_added') {
-                // Refresh all project and task data with proper state management
-                setState(() {
-                  isLoadingProjectOverview = true;
-                  isLoadingTaskOverview = true;
-                  isLoadingProjectList = true;
-                  isLoadingTaskList = true;
-                });
+                  if (result == 'task_added') {
+                    // Refresh all project and task data with proper state management
+                    setState(() {
+                      isLoadingProjectOverview = true;
+                      isLoadingTaskOverview = true;
+                      isLoadingProjectList = true;
+                      isLoadingTaskList = true;
+                    });
 
-                // Refresh all data
-                await fetchProjectOverview();
-                await fetchTaskOverview();
-                await fetchProjectLists();
-                await fetchTasksLists();
-              }
-            },
-            width: double.infinity,
-            backgroundColor: kPrimaryColor,
-            icon: const Icon(Icons.task),
-          ),
-          const SizedBox(
-            height: 20,
-          ),
-          // on Progress Task Table
-          UserUtils.buildExpandableGroup(
-            title: "In Progress Task",
-            color: cardDarkGreen,
-            expanded: showTaskProgress,
-            onToggle: () =>
-                setState(() => showTaskProgress = !showTaskProgress),
-            groupList: inProgressTasks,
-            onSeeMore: (task) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AdminSingleTaskScreen(
-                      taskId: task['task_id']?.toString() ?? ''),
-                ),
-              );
-            },
-          ),
-          // Overdue Task Table
-          const SizedBox(height: 10),
-          UserUtils.buildExpandableGroup(
-            title: "Overdue Task",
-            color: cardRed,
-            expanded: showTaskOverdue,
-            onToggle: () => setState(() => showTaskOverdue = !showTaskOverdue),
-            groupList: overdueTasks,
-            onSeeMore: (task) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AdminSingleTaskScreen(
-                      taskId: task['task_id']?.toString() ?? ''),
-                ),
-              );
-            },
-          ),
-          // Pending Task Table
-          const SizedBox(height: 10),
-          UserUtils.buildExpandableGroup(
-            title: "Pending Task",
-            color: cardYellow,
-            expanded: showTaskPending,
-            onToggle: () => setState(() => showTaskPending = !showTaskPending),
-            groupList: pendingTasks,
-            onSeeMore: (task) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AdminSingleTaskScreen(
-                      taskId: task['task_id']?.toString() ?? ''),
-                ),
-              );
-            },
-          ),
-          // Complete Task Table
-          const SizedBox(height: 10),
-          UserUtils.buildExpandableGroup(
-            title: "Complete Task",
-            color: Colors.blue,
-            expanded: showTaskComplete,
-            onToggle: () =>
-                setState(() => showTaskComplete = !showTaskComplete),
-            groupList: completeTasks,
-            onSeeMore: (task) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AdminSingleTaskScreen(
-                      taskId: task['task_id']?.toString() ?? ''),
-                ),
-              );
-            },
-          ),
+                    // Refresh all data
+                    await fetchProjectOverview();
+                    await fetchTaskOverview();
+                    await fetchProjectLists();
+                    await fetchTasksLists();
+                  }
+                },
+                width: double.infinity,
+                backgroundColor: kPrimaryColor,
+                icon: const Icon(Icons.task),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              // on Progress Task Table
+              UserUtils.buildExpandableGroup(
+                title: "In Progress Task",
+                color: cardDarkGreen,
+                expanded: showTaskProgress,
+                onToggle: () =>
+                    setState(() => showTaskProgress = !showTaskProgress),
+                groupList: inProgressTasks,
+                onSeeMore: (task) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AdminSingleTaskScreen(
+                          taskId: task['task_id']?.toString() ?? ''),
+                    ),
+                  );
+                },
+              ),
+              // Overdue Task Table
+              const SizedBox(height: 10),
+              UserUtils.buildExpandableGroup(
+                title: "Overdue Task",
+                color: cardRed,
+                expanded: showTaskOverdue,
+                onToggle: () =>
+                    setState(() => showTaskOverdue = !showTaskOverdue),
+                groupList: overdueTasks,
+                onSeeMore: (task) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AdminSingleTaskScreen(
+                          taskId: task['task_id']?.toString() ?? ''),
+                    ),
+                  );
+                },
+              ),
+              // Pending Task Table
+              const SizedBox(height: 10),
+              UserUtils.buildExpandableGroup(
+                title: "Pending Task",
+                color: cardYellow,
+                expanded: showTaskPending,
+                onToggle: () =>
+                    setState(() => showTaskPending = !showTaskPending),
+                groupList: pendingTasks,
+                onSeeMore: (task) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AdminSingleTaskScreen(
+                          taskId: task['task_id']?.toString() ?? ''),
+                    ),
+                  );
+                },
+              ),
+              // Complete Task Table
+              const SizedBox(height: 10),
+              UserUtils.buildExpandableGroup(
+                title: "Complete Task",
+                color: Colors.blue,
+                expanded: showTaskComplete,
+                onToggle: () =>
+                    setState(() => showTaskComplete = !showTaskComplete),
+                groupList: completeTasks,
+                onSeeMore: (task) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AdminSingleTaskScreen(
+                          taskId: task['task_id']?.toString() ?? ''),
+                    ),
+                  );
+                },
+              ),
 
-          const SizedBox(
-            height: 20,
-          )
-        ],
-      ),
-    ));
+              const SizedBox(
+                height: 20,
+              )
+            ],
+          ),
+        ));
   }
 }

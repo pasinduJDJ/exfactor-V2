@@ -1,5 +1,9 @@
 import 'package:exfactor/screens/admin/admin_add_task_screen.dart';
 import 'package:exfactor/screens/admin/admin_single_profile.dart';
+import 'package:exfactor/screens/admin/admin_revenu_screen.dart';
+import 'package:exfactor/screens/admin/admin_closed_deal_screen.dart';
+import 'package:exfactor/screens/admin/admin_manage_project&TaskScreen.dart';
+import 'package:exfactor/screens/admin/admin_notification_screen.dart';
 import 'package:exfactor/utils/colors.dart';
 import 'package:exfactor/widgets/common/custom_button.dart';
 import 'package:exfactor/widgets/utils_widget.dart';
@@ -10,261 +14,272 @@ import 'package:exfactor/services/superbase_service.dart';
 import 'package:exfactor/screens/task_screen.dart';
 
 class AdminHome extends StatefulWidget {
-  const AdminHome({super.key});
+  final Function(int)? onNavigateToTab; // Add callback for navigation
+  const AdminHome({super.key, this.onNavigateToTab});
 
   @override
   State<AdminHome> createState() => _AdminHomeState();
 }
 
 class _AdminHomeState extends State<AdminHome> {
-  bool showLiveProject = false;
-  bool showPending = false;
-  bool showProgress = false;
-  bool showOverdue = false;
-  bool showComplete = false;
-  bool showOverDueTask = false;
-  bool showPendingTask = false;
-
   int liveProjectCount = 0;
-  int overdueTaskCount = 0;
-  int pendingTaskCount = 0;
-  int onProgressTaskCount = 0;
-  int completeTaskCount = 0;
-  bool isLoadingSummary = true;
-
-  List<Map<String, dynamic>> liveProjects = [];
-  List<Map<String, dynamic>> onProgressTask = [];
-  List<Map<String, dynamic>> teamMembers = [];
-  List<Map<String, dynamic>> overDueTask = [];
-  List<Map<String, dynamic>> pendingTask = [];
-  List<Map<String, dynamic>> completeTask = [];
+  int todayNotificationCount = 0;
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    fetchSummaryCounts();
-    fetchTeamMembers();
+    fetchDashboardData();
   }
 
-  Future<void> fetchSummaryCounts() async {
-    setState(() => isLoadingSummary = true);
+  Future<void> fetchDashboardData() async {
+    setState(() => isLoading = true);
 
-    final projects = await SupabaseService.getAllProjects();
-    final tasks = await SupabaseService.getAllTasks();
-    final now = DateTime.now();
+    try {
+      // Fetch projects and tasks
+      final projects = await SupabaseService.getAllProjects();
+      final tasks = await SupabaseService.getAllTasks();
+      final notifications = await SupabaseService.getAllNotifications();
 
-    liveProjectCount = projects.where((p) {
-      final status = (p['status'] ?? '').toString().toLowerCase();
-      return status == 'on progress' || status == 'progress';
-    }).length;
+      final now = DateTime.now();
 
-    // Reset lists
-    pendingTask = [];
-    onProgressTask = [];
-    overDueTask = [];
-    completeTask = [];
+      // Calculate live projects count
+      liveProjectCount = projects.where((p) {
+        final status = (p['status'] ?? '').toString().toLowerCase();
+        return status == 'on progress' || status == 'progress';
+      }).length;
 
-    // Categorize tasks and update lists
-    for (final t in tasks) {
-      final status = (t['status'] ?? '').toString().toLowerCase();
-      final endDateStr = t['end_date'] ?? t['project_end_date'] ?? '';
-      DateTime? endDate;
-      try {
-        endDate = endDateStr != '' ? DateTime.parse(endDateStr) : null;
-      } catch (_) {
-        endDate = null;
-      }
-
-      if (status == 'pending') {
-        pendingTask.add(t);
-      } else if (status == 'complete') {
-        completeTask.add(t);
-      } else if (status == 'on progress' || status == 'progress') {
-        if (endDate != null && endDate.isBefore(now)) {
-          overDueTask.add(t);
-        } else {
-          onProgressTask.add(t);
+      // Calculate today's notifications count
+      final today = DateTime(now.year, now.month, now.day);
+      todayNotificationCount = notifications.where((n) {
+        final dateStr = n['schedule_date'] ?? '';
+        if (dateStr.isEmpty) return false;
+        try {
+          final notifDate = DateTime.parse(dateStr);
+          final notifDay =
+              DateTime(notifDate.year, notifDate.month, notifDate.day);
+          return notifDay == today;
+        } catch (_) {
+          return false;
         }
-      }
+      }).length;
+
+      setState(() => isLoading = false);
+    } catch (e) {
+      print('Error fetching dashboard data: $e');
+      setState(() => isLoading = false);
     }
-
-    // Update counts from lists
-    pendingTaskCount = pendingTask.length;
-    onProgressTaskCount = onProgressTask.length;
-    overdueTaskCount = overDueTask.length;
-    completeTaskCount = completeTask.length;
-
-    setState(() => isLoadingSummary = false);
-  }
-
-  Future<void> fetchTeamMembers() async {
-    final users = await SupabaseService.getAllUsers();
-    // Display all users, no role filtering
-    teamMembers = users;
-    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    List<Map<String, dynamic>> statusItems = [
-      {'label': 'PENDING', 'count': pendingTaskCount, 'color': cardYellow},
-      {
-        'label': 'ON PROGRESS',
-        'count': onProgressTaskCount,
-        'color': cardGreen
-      },
-      {'label': 'OVER DUE', 'count': overdueTaskCount, 'color': cardRed},
-    ];
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 15),
-      child: Column(children: [
-        const SizedBox(height: 30),
-        isLoadingSummary
-            ? const Center(child: CircularProgressIndicator())
-            : UserUtils.buildStatusSummaryCard(
-                statusItems,
-                onTap: (index) {
-                  // 0: Pending, 1: On Progress, 2: Over Due
-                  String categoryTitle = statusItems[index]['label'];
-                  List<Map<String, dynamic>> taskList;
-                  if (index == 0) {
-                    taskList = pendingTask;
-                  } else if (index == 1) {
-                    taskList = onProgressTask;
-                  } else {
-                    taskList = overDueTask;
-                  }
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => TaskScreen(
-                        categoryTitle: categoryTitle,
-                        taskList: taskList,
+    return Scaffold(
+      backgroundColor: backgroundColor,
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              child: Column(
+                children: [
+                  const SizedBox(height: 30),
+
+                  // Revenue Card
+                  _buildRevenueCard(),
+
+                  const SizedBox(height: 16),
+
+                  // Total Closed Deals Card
+                  _buildSimpleCard(
+                    title: "Total Closed Deals",
+                    value: "10",
+                    color: cardGreen,
+                    onTap: () {
+                      // Navigate to Sales tab (index 1)
+                      widget.onNavigateToTab?.call(1);
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Live Projects Card
+                  _buildSimpleCard(
+                    title: "Live Projects",
+                    value: liveProjectCount.toString(),
+                    color: kPrimaryColor,
+                    onTap: () {
+                      // Navigate to Tasks tab (index 2)
+                      widget.onNavigateToTab?.call(2);
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Events Card
+                  _buildSimpleCard(
+                    title: "Events",
+                    value: todayNotificationCount.toString(),
+                    color: cardYellow,
+                    onTap: () {
+                      // Navigate to Events tab (index 3)
+                      widget.onNavigateToTab?.call(3);
+                    },
+                  ),
+
+                  const SizedBox(height: 30),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _buildRevenueCard() {
+    return Container(
+      width: double.infinity,
+      height: MediaQuery.of(context).size.height * 0.2, // Flexible height
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+            color: const Color.fromARGB(255, 121, 121, 121), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(4, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            // Navigate to Sales tab (index 1) for Revenue
+            widget.onNavigateToTab?.call(1);
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title - Top Left
+                const Text(
+                  "Revenue",
+                  style: TextStyle(
+                    fontSize: 25,
+                    fontWeight: FontWeight.bold,
+                    color: primaryColor,
+                  ),
+                ),
+
+                const Spacer(), // Pushes content to bottom
+
+                // Progress Bar and Value - Bottom Center
+                Column(
+                  children: [
+                    // Progress Bar
+                    Container(
+                      width: double.infinity,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: 0.69, // 18M / 26M ≈ 0.69
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: cardGreen,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
                       ),
                     ),
-                  );
-                },
-              ),
-        const SizedBox(height: 30),
-        const Row(
-          children: [
-            Text(
-              "Current On going Project",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            )
-          ],
-        ),
-        const SizedBox(
-          height: 10,
-        ),
-        UserUtils.buildExpandableGroup(
-          title: "Live Project",
-          color: kPrimaryColor,
-          expanded: showLiveProject,
-          onToggle: () => setState(() => showLiveProject = !showLiveProject),
-          groupList: liveProjects,
-          onSeeMore: (project) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => AdminSingleProjectScreen(
-                    projectId: project['project_id']?.toString() ?? ''),
-              ),
-            );
-          },
-        ),
-        const SizedBox(
-          height: 20,
-        ),
-        const Row(
-          children: [
-            Text(
-              "Manage Task Profile",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            )
-          ],
-        ),
-        const SizedBox(
-          height: 10,
-        ),
-        UserUtils.buildExpandableGroup(
-          title: "OverDue Task",
-          color: cardDarkRed,
-          expanded: showOverDueTask,
-          onToggle: () => setState(() => showOverDueTask = !showOverDueTask),
-          groupList: overDueTask,
-          onSeeMore: (task) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => AdminSingleProjectScreen(
-                    projectId: task['task_id']?.toString() ?? ''),
-              ),
-            );
-          },
-        ),
-        const SizedBox(
-          height: 10,
-        ),
-        UserUtils.buildExpandableGroup(
-          title: "In Progress Task",
-          color: cardGreen,
-          expanded: showProgress,
-          onToggle: () => setState(() => showProgress = !showProgress),
-          groupList: onProgressTask,
-          onSeeMore: (task) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => AdminSingleTaskScreen(
-                    taskId: task['task_id']?.toString() ?? ''),
-              ),
-            );
-          },
-        ),
-        const SizedBox(
-          height: 10,
-        ),
-        UserUtils.buildExpandableGroup(
-          title: "Pending Task",
-          color: cardYellow,
-          expanded: showPending,
-          onToggle: () => setState(() => showPending = !showPending),
-          groupList: pendingTask,
-          onSeeMore: (task) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => AdminSingleTaskScreen(
-                    taskId: task['task_id']?.toString() ?? ''),
-              ),
-            );
-          },
-        ),
-        const SizedBox(
-          height: 10,
-        ),
-        CustomButton(
-          text: "Add Task",
-          onPressed: () async {
-            final result = await Navigator.push(context,
-                MaterialPageRoute(builder: (_) => AdminAddTaskScreen()));
 
-            if (result == 'task_added') {
-              // Refresh all data
-              await fetchSummaryCounts();
-              await fetchTeamMembers();
-            }
-          },
-          backgroundColor: kPrimaryColor,
-          width: double.infinity,
-          height: 48,
-          icon: Icon(Icons.assignment_turned_in_outlined),
+                    const SizedBox(height: 8),
+
+                    // Value Text
+                    Text(
+                      "18,000,000.00 / 26,000,000.00",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: cardGreen,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
-        const SizedBox(
-          height: 20,
+      ),
+    );
+  }
+
+  Widget _buildSimpleCard({
+    required String title,
+    required String value,
+    required Color color,
+    VoidCallback? onTap,
+  }) {
+    return Container(
+      width: double.infinity,
+      height: MediaQuery.of(context).size.height * 0.15, // Flexible height
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+            color: const Color.fromARGB(255, 121, 121, 121), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(4, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title - Top Left
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: primaryColor,
+                  ),
+                ),
+
+                const Spacer(), // Pushes value to bottom
+
+                // Value - Bottom Right
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: Text(
+                    value,
+                    style: const TextStyle(
+                      fontSize: 35,
+                      fontWeight: FontWeight.bold,
+                      color: primaryColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-      ]),
+      ),
     );
   }
 }

@@ -1,16 +1,19 @@
 import 'dart:ui';
+import 'package:exfactor/utils/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class UserUtils {
   // Summary card
   static Widget buildStatusSummaryCard(List<Map<String, dynamic>> items,
-      {void Function(int index)? onTap}) {
+      {void Function(int index)? onTap, Color? color}) {
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
       ),
       elevation: 8,
+      color: color ??
+          primaryColor, // Use provided color or default to primaryColor
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 20),
         child: Row(
@@ -44,7 +47,7 @@ class UserUtils {
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: primaryColor,
                         ),
                       ),
                     ),
@@ -52,6 +55,7 @@ class UserUtils {
                     Text(
                       item['label'],
                       style: const TextStyle(
+                        color: kWhite,
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
                       ),

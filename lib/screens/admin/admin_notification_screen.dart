@@ -1,4 +1,5 @@
 import 'package:exfactor/screens/admin/admin_add_notification.dart';
+import 'package:exfactor/screens/admin/admin_home.dart';
 import 'package:exfactor/utils/colors.dart';
 import 'package:exfactor/widgets/common/custom_button.dart';
 import 'package:exfactor/widgets/notification_card_view.dart';
@@ -74,145 +75,166 @@ class _AdminNotificationScreenBodyState
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 15),
-      child: Column(
-        children: [
-          const SizedBox(
-            height: 30,
-          ),
-          CustomButton(
-            text: "Add Alert",
-            width: double.infinity,
-            backgroundColor: kPrimaryColor,
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => AdminAddNotificationScreen()),
-              );
+    return Scaffold(
+      backgroundColor: backgroundColor,
+      // appBar: AppBar(
+      //   title: const Text(
+      //     "NOTIFICATIONS",
+      //     style: TextStyle(
+      //       letterSpacing: 2,
+      //       color: primaryColor,
+      //       fontWeight: FontWeight.bold,
+      //     ),
+      //   ),
+      //   centerTitle: true,
+      //   toolbarHeight: 80,
+      //   shape: const RoundedRectangleBorder(
+      //     borderRadius: BorderRadius.only(
+      //       bottomLeft: Radius.circular(18),
+      //       bottomRight: Radius.circular(18),
+      //     ),
+      //   ),
+      // ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(horizontal: 15),
+        child: Column(
+          children: [
+            const SizedBox(
+              height: 30,
+            ),
+            CustomButton(
+              text: "Add Alert",
+              width: double.infinity,
+              backgroundColor: kPrimaryColor,
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => AdminAddNotificationScreen()),
+                );
 
-              if (result == 'notification_added') {
-                fetchNotifications(); // Refresh after a notification is added
-              }
-            },
-          ),
-          const SizedBox(
-            height: 20,
-          ),
-          const Row(
-            children: [
-              Text(
-                "Notification ",
-                style: TextStyle(
-                    fontSize: 20,
+                if (result == 'notification_added') {
+                  fetchNotifications(); // Refresh after a notification is added
+                }
+              },
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            const Row(
+              children: [
+                Text(
+                  "Notification ",
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1),
+                )
+              ],
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            const Row(
+              children: [
+                Text(
+                  "Today Notification ",
+                  style: TextStyle(
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    letterSpacing: 1),
-              )
-            ],
-          ),
-          const SizedBox(
-            height: 20,
-          ),
-          const SizedBox(
-            height: 20,
-          ),
-          const Row(
-            children: [
-              Text(
-                "Today Notification ",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              )
-            ],
-          ),
-          const SizedBox(
-            height: 10,
-          ),
-          isLoading
-              ? const CircularProgressIndicator()
-              : NotificationCard.buildNotificationCards(
-                  todayNotifications
-                      .map((n) => {
-                            'notification_id': n['notification_id'],
-                            'title': n['title'] ?? '',
-                            'subtitle': n['message'] ?? '',
-                            'type': n['type'] ?? '',
-                            'submission_date': n['schedule_date'] ?? '',
-                          })
-                      .toList(),
-                  onDelete: (int notificationId) async {
-                    setState(() {
-                      isLoading = true;
-                    });
-                    await SupabaseService.deleteNotification(notificationId);
-                    await fetchNotifications();
-                  },
-                  onEdit: (notification) async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AdminNotificationEditScreen(
-                            notification: notification),
-                      ),
-                    );
-                    if (result == true) {
+                  ),
+                )
+              ],
+            ),
+            const SizedBox(
+              height: 10,
+            ),
+            isLoading
+                ? const CircularProgressIndicator()
+                : NotificationCard.buildNotificationCards(
+                    todayNotifications
+                        .map((n) => {
+                              'notification_id': n['notification_id'],
+                              'title': n['title'] ?? '',
+                              'subtitle': n['message'] ?? '',
+                              'type': n['type'] ?? '',
+                              'submission_date': n['schedule_date'] ?? '',
+                            })
+                        .toList(),
+                    onDelete: (int notificationId) async {
+                      setState(() {
+                        isLoading = true;
+                      });
+                      await SupabaseService.deleteNotification(notificationId);
                       await fetchNotifications();
-                    }
-                  },
-                ),
-          const SizedBox(
-            height: 20,
-          ),
-          const Row(
-            children: [
-              Text(
-                "Up coming Notification ",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              )
-            ],
-          ),
-          const SizedBox(
-            height: 10,
-          ),
-          isLoading
-              ? const CircularProgressIndicator()
-              : NotificationCard.buildNotificationCards(
-                  futureNotifications
-                      .map((n) => {
-                            'notification_id': n['notification_id'],
-                            'title': n['title'] ?? '',
-                            'subtitle': n['message'] ?? '',
-                            'type': n['type'] ?? '',
-                            'submission_date': n['schedule_date'] ?? '',
-                          })
-                      .toList(),
-                  onDelete: (int notificationId) async {
-                    setState(() {
-                      isLoading = true;
-                    });
-                    await SupabaseService.deleteNotification(notificationId);
-                    await fetchNotifications();
-                  },
-                  onEdit: (notification) async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AdminNotificationEditScreen(
-                            notification: notification),
-                      ),
-                    );
-                    if (result == true) {
+                    },
+                    onEdit: (notification) async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AdminNotificationEditScreen(
+                              notification: notification),
+                        ),
+                      );
+                      if (result == true) {
+                        await fetchNotifications();
+                      }
+                    },
+                  ),
+            const SizedBox(
+              height: 20,
+            ),
+            const Row(
+              children: [
+                Text(
+                  "Up coming Notification ",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                )
+              ],
+            ),
+            const SizedBox(
+              height: 10,
+            ),
+            isLoading
+                ? const CircularProgressIndicator()
+                : NotificationCard.buildNotificationCards(
+                    futureNotifications
+                        .map((n) => {
+                              'notification_id': n['notification_id'],
+                              'title': n['title'] ?? '',
+                              'subtitle': n['message'] ?? '',
+                              'type': n['type'] ?? '',
+                              'submission_date': n['schedule_date'] ?? '',
+                            })
+                        .toList(),
+                    onDelete: (int notificationId) async {
+                      setState(() {
+                        isLoading = true;
+                      });
+                      await SupabaseService.deleteNotification(notificationId);
                       await fetchNotifications();
-                    }
-                  },
-                ),
-        ],
+                    },
+                    onEdit: (notification) async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AdminNotificationEditScreen(
+                              notification: notification),
+                        ),
+                      );
+                      if (result == true) {
+                        await fetchNotifications();
+                      }
+                    },
+                  ),
+          ],
+        ),
       ),
     );
   }

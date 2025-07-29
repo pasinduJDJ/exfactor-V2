@@ -31,8 +31,21 @@ class SupabaseService {
 
   // GET ALL PROJECTS
   static Future<List<Map<String, dynamic>>> getAllProjects() async {
-    final response = await _client.from('project').select();
-    return List<Map<String, dynamic>>.from(response);
+    try {
+      final response = await _client.from('project').select();
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Error fetching projects: $e');
+      if (e.toString().contains('Connection reset by peer') ||
+          e.toString().contains('SocketException')) {
+        throw Exception(
+            'Network connection error. Please check your internet connection and try again.');
+      } else if (e.toString().contains('JWT')) {
+        throw Exception('Authentication error. Please log in again.');
+      } else {
+        throw Exception('Failed to fetch projects: ${e.toString()}');
+      }
+    }
   }
 
   // Update a project by project_id
@@ -131,8 +144,21 @@ class SupabaseService {
 
   // GET ALL TASKS
   static Future<List<Map<String, dynamic>>> getAllTasks() async {
-    final response = await _client.from('task').select();
-    return List<Map<String, dynamic>>.from(response);
+    try {
+      final response = await _client.from('task').select();
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Error fetching tasks: $e');
+      if (e.toString().contains('Connection reset by peer') ||
+          e.toString().contains('SocketException')) {
+        throw Exception(
+            'Network connection error. Please check your internet connection and try again.');
+      } else if (e.toString().contains('JWT')) {
+        throw Exception('Authentication error. Please log in again.');
+      } else {
+        throw Exception('Failed to fetch tasks: ${e.toString()}');
+      }
+    }
   }
 
   // GET TASKS FOR A PROJECT
@@ -171,8 +197,21 @@ class SupabaseService {
   // Users Management ////////////////////////////////////////////////////////////////////////////////////////////////////
   // GET ALL USERS
   static Future<List<Map<String, dynamic>>> getAllUsers() async {
-    final response = await _client.from('user').select();
-    return List<Map<String, dynamic>>.from(response);
+    try {
+      final response = await _client.from('user').select();
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Error fetching users: $e');
+      if (e.toString().contains('Connection reset by peer') ||
+          e.toString().contains('SocketException')) {
+        throw Exception(
+            'Network connection error. Please check your internet connection and try again.');
+      } else if (e.toString().contains('JWT')) {
+        throw Exception('Authentication error. Please log in again.');
+      } else {
+        throw Exception('Failed to fetch users: ${e.toString()}');
+      }
+    }
   }
 
   // DELETE USER

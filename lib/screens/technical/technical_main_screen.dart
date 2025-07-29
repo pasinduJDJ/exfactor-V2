@@ -1,3 +1,4 @@
+import 'package:exfactor/screens/login_page.dart';
 import 'package:exfactor/widgets/common/custom_app_bar_with_icon.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/common/base_layout.dart';
@@ -66,6 +67,32 @@ class _TechnicalMainScreenState extends State<TechnicalMainScreen> {
     }
   }
 
+  void _handleLogout() {
+    // Show confirmation dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Logout'),
+          content: const Text('Are you sure you want to logout?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                handleLogout(context);
+              },
+              child: const Text('Logout'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BaseLayout(
@@ -78,6 +105,7 @@ class _TechnicalMainScreenState extends State<TechnicalMainScreen> {
       onIndexChanged: (index) => setState(() => _currentIndex = index),
       navigationItems: _navigationItems,
       customAppBar: _getCustomAppBar(),
+      onLogout: _handleLogout,
     );
   }
 }
