@@ -2,24 +2,35 @@ import 'package:exfactor/screens/login_page.dart';
 import 'package:exfactor/widgets/common/custom_app_bar_with_icon.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/common/base_layout.dart';
-import 'supervisor_home.dart';
-import 'supervisor_task_screen.dart';
+import 'sales_home.dart';
+import 'sales_task_screen.dart';
 import '../notification_screen.dart';
-import 'supervisor_profile_screen.dart';
+import 'sales_profile_screen.dart';
 import 'package:exfactor/models/user_model.dart';
 
-class SupervisorMainScreen extends StatefulWidget {
+class SalesMainScreen extends StatefulWidget {
   final UserModel user;
-  const SupervisorMainScreen({Key? key, required this.user}) : super(key: key);
+  const SalesMainScreen({Key? key, required this.user}) : super(key: key);
 
   @override
-  State<SupervisorMainScreen> createState() => _SupervisorMainScreenState();
+  State<SalesMainScreen> createState() => _SalesMainScreenState();
 }
 
-class _SupervisorMainScreenState extends State<SupervisorMainScreen> {
+class _SalesMainScreenState extends State<SalesMainScreen> {
   int _currentIndex = 0;
 
   late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      const SalesHomeScreen(),
+      const SalesTaskScreen(),
+      const NotificationScreen(userRole: 'sales'),
+      SalesProfileScreen(),
+    ];
+  }
 
   final List<BottomNavigationBarItem> _navigationItems = const [
     BottomNavigationBarItem(
@@ -32,7 +43,7 @@ class _SupervisorMainScreenState extends State<SupervisorMainScreen> {
     ),
     BottomNavigationBarItem(
       icon: Icon(Icons.notifications),
-      label: 'Notifications',
+      label: 'Notification',
     ),
     BottomNavigationBarItem(
       icon: Icon(Icons.person),
@@ -40,22 +51,11 @@ class _SupervisorMainScreenState extends State<SupervisorMainScreen> {
     ),
   ];
 
-  @override
-  void initState() {
-    super.initState();
-    _screens = [
-      const SupervisorHome(),
-      const SupervisorTaskScreen(),
-      const NotificationScreen(userRole: 'supervisor'),
-      const SupervisorProfileScreen(),
-    ];
-  }
-
   PreferredSizeWidget? _getCustomAppBar() {
     switch (_currentIndex) {
       case 1:
         return const CustomAppBarWithIcon(
-            title: 'Epic Task Tracking', icon: Icons.list_alt);
+            title: 'Sales Task Tracking', icon: Icons.list_alt);
       case 2:
         return const CustomAppBarWithIcon(
             title: 'Notifications', icon: Icons.notifications_active);
@@ -63,7 +63,7 @@ class _SupervisorMainScreenState extends State<SupervisorMainScreen> {
         return const CustomAppBarWithIcon(
             title: 'My Profile', icon: Icons.account_circle);
       default:
-        return null;
+        return null; // use default avatar header for Home
     }
   }
 
@@ -96,9 +96,9 @@ class _SupervisorMainScreenState extends State<SupervisorMainScreen> {
   @override
   Widget build(BuildContext context) {
     return BaseLayout(
-      title: "${widget.user.firstName ?? ''}",
-      subtitle: "${widget.user.position ?? ''}",
-      profileImage: "${widget.user.profileImage ?? ''}",
+      title: widget.user.firstName ?? '',
+      subtitle: widget.user.position ?? '',
+      profileImage: widget.user.profileImage ?? '',
       onProfileTap: () {},
       body: _screens[_currentIndex],
       currentIndex: _currentIndex,

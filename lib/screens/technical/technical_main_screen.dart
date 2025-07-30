@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../../widgets/common/base_layout.dart';
 import 'technical_home.dart';
 import 'technical_task_screen.dart';
-import 'technical_notification_screen.dart';
+import '../notification_screen.dart';
 import 'technical_profile_screen.dart';
 import 'package:exfactor/models/user_model.dart';
 
@@ -27,7 +27,7 @@ class _TechnicalMainScreenState extends State<TechnicalMainScreen> {
     _screens = [
       const TechnicalHome(),
       const TaskTrackingBody(),
-      const TechnicalReportScreen(),
+      const NotificationScreen(userRole: 'technical'),
       TechnicalProfileScreen(),
     ];
   }

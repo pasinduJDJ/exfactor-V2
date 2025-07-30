@@ -1,6 +1,7 @@
 import 'package:exfactor/screens/admin/admin_main_screen.dart';
 import 'package:exfactor/screens/supervisor/supervisor_main_screen.dart';
 import 'package:exfactor/screens/technical/technical_main_screen.dart';
+import 'package:exfactor/screens/Sales/sale_main_screen.dart';
 import 'package:exfactor/utils/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -137,6 +138,10 @@ class _LoginPageState extends State<LoginPage> {
     } else if (userModel.role == 'Technician') {
       Navigator.push(context, MaterialPageRoute(builder: (_) {
         return TechnicalMainScreen(user: userModel);
+      }));
+    } else if (userModel.role == 'Sales') {
+      Navigator.push(context, MaterialPageRoute(builder: (_) {
+        return SalesMainScreen(user: userModel);
       }));
     } else {
       _showToast("No role found for this user.");

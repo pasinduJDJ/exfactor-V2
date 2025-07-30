@@ -49,81 +49,82 @@ class _MangeUsersState extends State<MangeUsers> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        backgroundColor: backgroundColor,
         body: SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 15),
-      child: Column(
-        children: [
-          const SizedBox(
-            height: 30,
-          ),
-          CustomButton(
-            text: "Add New Team Members",
-            width: double.infinity,
-            backgroundColor: kPrimaryColor,
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => AddUserScreen()),
-              );
-
-              if (result == 'user_added') {
-                fetchUsers(); // Only run after a user is added
-              } else if (result == 'user_removed') {
-                fetchUsers(); // Refresh after a user is removed
-              }
-            },
-          ),
-          const SizedBox(
-            height: 20,
-          ),
-          CustomButton(
-            text: "Profile",
-            width: double.infinity,
-            backgroundColor: cardDarkGreen,
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AdminProfile(),
-                ),
-              );
-            },
-          ),
-          const SizedBox(
-            height: 20,
-          ),
-          const Row(
+          padding: EdgeInsets.symmetric(horizontal: 15),
+          child: Column(
             children: [
-              Text(
-                "Team Members ",
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1),
+              const SizedBox(
+                height: 30,
               ),
+              CustomButton(
+                text: "Add New Team Members",
+                width: double.infinity,
+                backgroundColor: kPrimaryColor,
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => AddUserScreen()),
+                  );
+
+                  if (result == 'user_added') {
+                    fetchUsers(); // Only run after a user is added
+                  } else if (result == 'user_removed') {
+                    fetchUsers(); // Refresh after a user is removed
+                  }
+                },
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              CustomButton(
+                text: "Profile",
+                width: double.infinity,
+                backgroundColor: cardDarkGreen,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AdminProfile(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              const Row(
+                children: [
+                  Text(
+                    "Team Members ",
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1),
+                  ),
+                ],
+              ),
+              isLoading
+                  ? const CircularProgressIndicator()
+                  : UserCard.buildUserGridCard(
+                      users
+                          .map((u) => {
+                                'id': u['id']?.toString() ?? '',
+                                'name':
+                                    '${u['first_name'] ?? ''} ${u['last_name'] ?? ''}',
+                                'email': u['email']?.toString() ?? '',
+                                'role': u['role']?.toString() ?? '',
+                                'avatar': u['profile_image']?.toString() ?? '',
+                              } as Map<String, String>)
+                          .toList(),
+                      onUserRemoved: (String result) {
+                        if (result == 'user_removed') {
+                          fetchUsers(); // Refresh the user list
+                        }
+                      },
+                    ),
             ],
           ),
-          isLoading
-              ? const CircularProgressIndicator()
-              : UserCard.buildUserGridCard(
-                  users
-                      .map((u) => {
-                            'id': u['id']?.toString() ?? '',
-                            'name':
-                                '${u['first_name'] ?? ''} ${u['last_name'] ?? ''}',
-                            'email': u['email']?.toString() ?? '',
-                            'role': u['role']?.toString() ?? '',
-                            'avatar': u['profile_image']?.toString() ?? '',
-                          } as Map<String, String>)
-                      .toList(),
-                  onUserRemoved: (String result) {
-                    if (result == 'user_removed') {
-                      fetchUsers(); // Refresh the user list
-                    }
-                  },
-                ),
-        ],
-      ),
-    ));
+        ));
   }
 }

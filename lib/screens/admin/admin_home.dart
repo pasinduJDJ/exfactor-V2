@@ -255,7 +255,7 @@ class _AdminHomeState extends State<AdminHome> {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 20,
+                    fontSize: 23,
                     fontWeight: FontWeight.bold,
                     color: primaryColor,
                   ),
@@ -265,12 +265,12 @@ class _AdminHomeState extends State<AdminHome> {
 
                 // Value - Bottom Right
                 Align(
-                  alignment: Alignment.bottomRight,
+                  alignment: Alignment.bottomLeft,
                   child: Text(
                     value,
                     style: const TextStyle(
                       fontSize: 35,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w900,
                       color: primaryColor,
                     ),
                   ),

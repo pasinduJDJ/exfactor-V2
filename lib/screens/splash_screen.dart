@@ -4,6 +4,7 @@ import 'package:exfactor/screens/login_page.dart';
 import 'package:exfactor/screens/admin/admin_main_screen.dart';
 import 'package:exfactor/screens/supervisor/supervisor_main_screen.dart';
 import 'package:exfactor/screens/technical/technical_main_screen.dart';
+import 'package:exfactor/screens/Sales/sale_main_screen.dart';
 import 'package:exfactor/services/superbase_service.dart';
 import 'package:exfactor/models/user_model.dart';
 import 'package:local_auth/local_auth.dart';
@@ -78,6 +79,12 @@ class _SplashScreenState extends State<SplashScreen> {
               context,
               MaterialPageRoute(
                   builder: (_) => TechnicalMainScreen(user: userModel)));
+          return;
+        } else if (role == 'Sales') {
+          Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => SalesMainScreen(user: userModel)));
           return;
         }
       }
