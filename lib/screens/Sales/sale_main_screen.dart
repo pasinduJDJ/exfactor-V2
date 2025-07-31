@@ -5,7 +5,7 @@ import '../../widgets/common/base_layout.dart';
 import 'sales_home.dart';
 import 'sales_task_screen.dart';
 import '../notification_screen.dart';
-import 'sales_profile_screen.dart';
+import '../profile.dart';
 import 'package:exfactor/models/user_model.dart';
 
 class SalesMainScreen extends StatefulWidget {
@@ -28,7 +28,7 @@ class _SalesMainScreenState extends State<SalesMainScreen> {
       const SalesHomeScreen(),
       const SalesTaskScreen(),
       const NotificationScreen(userRole: 'sales'),
-      SalesProfileScreen(),
+      const ProfileScreen(userRole: 'sales'),
     ];
   }
 

@@ -5,7 +5,7 @@ import '../../widgets/common/base_layout.dart';
 import 'technical_home.dart';
 import 'technical_task_screen.dart';
 import '../notification_screen.dart';
-import 'technical_profile_screen.dart';
+import '../profile.dart';
 import 'package:exfactor/models/user_model.dart';
 
 class TechnicalMainScreen extends StatefulWidget {
@@ -28,7 +28,7 @@ class _TechnicalMainScreenState extends State<TechnicalMainScreen> {
       const TechnicalHome(),
       const TaskTrackingBody(),
       const NotificationScreen(userRole: 'technical'),
-      TechnicalProfileScreen(),
+      const ProfileScreen(userRole: 'technical'),
     ];
   }
 

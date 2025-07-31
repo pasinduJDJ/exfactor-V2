@@ -5,7 +5,7 @@ import '../../widgets/common/base_layout.dart';
 import 'supervisor_home.dart';
 import 'supervisor_task_screen.dart';
 import '../notification_screen.dart';
-import 'supervisor_profile_screen.dart';
+import '../profile.dart';
 import 'package:exfactor/models/user_model.dart';
 
 class SupervisorMainScreen extends StatefulWidget {
@@ -47,7 +47,7 @@ class _SupervisorMainScreenState extends State<SupervisorMainScreen> {
       const SupervisorHome(),
       const SupervisorTaskScreen(),
       const NotificationScreen(userRole: 'supervisor'),
-      const SupervisorProfileScreen(),
+      const ProfileScreen(userRole: 'supervisor'),
     ];
   }
 

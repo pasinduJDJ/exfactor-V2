@@ -392,17 +392,28 @@ class SupabaseService {
   static Future<String?> uploadProfileImage(
       String userId, String filePath) async {
     try {
+      print('Starting upload for user: $userId, file: $filePath');
+
       final fileName =
           'profile_$userId${filePath.substring(filePath.lastIndexOf("."))}';
+      print('Generated filename: $fileName');
+
+      print('Attempting to upload to profileimages bucket...');
       await _client.storage.from('profileimages').upload(
           fileName, File(filePath),
           fileOptions: const FileOptions(upsert: true));
+      print('Upload completed successfully');
+
       // Get public URL
       final publicUrl =
           _client.storage.from('profileimages').getPublicUrl(fileName);
+      print('Public URL: $publicUrl');
       return publicUrl;
     } catch (e, stack) {
       // Error handling for production
+      print('Error uploading profile image: $e');
+      print('Stack trace: $stack');
+      print('Error type: ${e.runtimeType}');
       return null;
     }
   }
