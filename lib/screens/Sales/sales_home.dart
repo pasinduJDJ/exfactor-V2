@@ -2,6 +2,7 @@ import 'package:exfactor/screens/Sales/sales_create_deal.dart';
 import 'package:flutter/material.dart';
 import 'package:exfactor/utils/colors.dart';
 import 'package:exfactor/widgets/common/custom_button.dart';
+import 'package:exfactor/services/saleService.dart';
 
 class SalesHomeScreen extends StatefulWidget {
   const SalesHomeScreen({super.key});
@@ -11,37 +12,146 @@ class SalesHomeScreen extends StatefulWidget {
 }
 
 class _SalesHomeScreenState extends State<SalesHomeScreen> {
+  Map<String, dynamic>? userAssignedTargets;
+  Map<String, double>? userAchievedSales;
+  bool isLoading = true;
+  String? currentUserId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserAssignedTargets();
+  }
+
+  Future<void> _loadUserAssignedTargets() async {
+    setState(() => isLoading = true);
+
+    try {
+      // Get assigned targets for current user using SaleService
+      final assignedTargets = await SaleService.getCurrentUserAssignedTargets();
+      print('Assigned targets: $assignedTargets');
+
+      // Get all registered sales for current user using SaleService (ALL deals)
+      final allRegisteredSales =
+          await SaleService.getCurrentUserAllRegisteredSales();
+      print('All registered sales: $allRegisteredSales');
+
+      setState(() {
+        userAssignedTargets = assignedTargets;
+        userAchievedSales =
+            allRegisteredSales; // Use ALL deals for progress tracking
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading user assigned targets: $e');
+      setState(() => isLoading = false);
+    }
+  }
+
+  // Calculate progress percentage using SaleService
+  double _calculateProgress(double achieved, double target) {
+    return SaleService.calculateProgress(achieved, target);
+  }
+
+  // Get current month's target using SaleService
+  double _getCurrentMonthTarget() {
+    return SaleService.getCurrentMonthTarget(userAssignedTargets);
+  }
+
+  // Get current quarter's target using SaleService
+  double _getCurrentQuarterTarget() {
+    return SaleService.getCurrentQuarterTarget(userAssignedTargets);
+  }
+
+  // Get annual target using SaleService
+  double _getAnnualTarget() {
+    return SaleService.getAnnualTarget(userAssignedTargets);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 15),
-        child: Column(
-          children: [
-            const SizedBox(height: 30),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : userAssignedTargets == null
+              ? _buildNoTargetsView()
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 30),
 
-            // Section 1: Monthly Sales Card
-            _buildMonthlySalesCard(),
+                      // Section 1: Monthly Sales Card
+                      _buildMonthlySalesCard(),
 
-            const SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
-            // Section 2: Sales Analysis Card
-            _buildSalesAnalysisCard(),
+                      // Section 2: Sales Analysis Card
+                      _buildSalesAnalysisCard(),
 
-            const SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
-            // Section 3: New Deal Register Button
-            _buildNewDealRegisterButton(),
+                      // Section 3: New Deal Register Button
+                      _buildNewDealRegisterButton(),
 
-            const SizedBox(height: 30),
-          ],
-        ),
+                      const SizedBox(height: 30),
+                    ],
+                  ),
+                ),
+    );
+  }
+
+  Widget _buildNoTargetsView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.assignment_outlined,
+            size: 64,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No targets assigned yet',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Contact your admin to assign sales targets',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[500],
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildMonthlySalesCard() {
+    final annualTarget = _getAnnualTarget();
+    final quarterlyTarget = _getCurrentQuarterTarget();
+    final monthlyTarget = _getCurrentMonthTarget();
+
+    // Get actual achieved values from deals (ALL deals regardless of status)
+    final annualAchieved = userAchievedSales?['annual'] ?? 0;
+    final quarterlyAchieved = userAchievedSales?['quarterly'] ?? 0;
+    final monthlyAchieved = userAchievedSales?['monthly'] ?? 0;
+
+    // Debug prints to verify calculations
+    print('=== Sales Home Progress Debug ===');
+    print('Annual Target: $annualTarget, Achieved: $annualAchieved');
+    print('Quarterly Target: $quarterlyTarget, Achieved: $quarterlyAchieved');
+    print('Monthly Target: $monthlyTarget, Achieved: $monthlyAchieved');
+    print('===============================');
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -54,27 +164,28 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
             children: [
               _buildSalesCard(
                 title: "Annual Sales",
-                percentage: 42.8,
-                dealValue: "100,000",
-                targetValue: "400,000",
+                percentage: _calculateProgress(annualAchieved, annualTarget),
+                dealValue: annualAchieved.toStringAsFixed(0),
+                targetValue: annualTarget.toStringAsFixed(0),
                 color: cardDarkRed,
                 cardWidth: 200,
               ),
               const SizedBox(width: 16),
               _buildSalesCard(
                 title: "Quarterly Sales",
-                percentage: 78.6,
-                dealValue: "100,000",
-                targetValue: "400,000",
+                percentage:
+                    _calculateProgress(quarterlyAchieved, quarterlyTarget),
+                dealValue: quarterlyAchieved.toStringAsFixed(0),
+                targetValue: quarterlyTarget.toStringAsFixed(0),
                 color: cardYellow,
                 cardWidth: 200,
               ),
               const SizedBox(width: 16),
               _buildSalesCard(
                 title: "Monthly Sales",
-                percentage: 88,
-                dealValue: "100,000",
-                targetValue: "400,000",
+                percentage: _calculateProgress(monthlyAchieved, monthlyTarget),
+                dealValue: monthlyAchieved.toStringAsFixed(0),
+                targetValue: monthlyTarget.toStringAsFixed(0),
                 color: cardDarkGreen,
                 cardWidth: 200,
               ),
@@ -260,6 +371,17 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
   }
 
   Widget _buildSalesAnalysisCard() {
+    final monthlyTarget = _getCurrentMonthTarget();
+    final monthlyAchieved = userAchievedSales?['monthly'] ?? 0;
+    final remainingSales = monthlyTarget - monthlyAchieved;
+
+    // Debug prints to verify calculations
+    print('=== Sales Analysis Card Debug ===');
+    print('Monthly Target: $monthlyTarget');
+    print('Monthly Achieved: $monthlyAchieved');
+    print('Remaining Sales: $remainingSales');
+    print('================================');
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -289,11 +411,14 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
           const SizedBox(height: 16),
 
           // Sales metrics
-          _buildSalesMetric("Sales Target:", "400,000", false),
+          _buildSalesMetric(
+              "Sales Target:", monthlyTarget.toStringAsFixed(0), false),
           const SizedBox(height: 8),
-          _buildSalesMetric("Registered Sales:", "100,000", false),
+          _buildSalesMetric(
+              "Registered Sales:", monthlyAchieved.toStringAsFixed(0), false),
           const SizedBox(height: 8),
-          _buildSalesMetric("Remaining Sales:", "300,000", true),
+          _buildSalesMetric(
+              "Remaining Sales:", remainingSales.toStringAsFixed(0), true),
         ],
       ),
     );
@@ -326,11 +451,13 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
   Widget _buildNewDealRegisterButton() {
     return CustomButton(
       text: "New Deal Register",
-      onPressed: () {
-        Navigator.push(
+      onPressed: () async {
+        await Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const CreateDeal()),
         );
+        // Refresh data after returning from deal creation
+        _loadUserAssignedTargets();
       },
       backgroundColor: kPrimaryColor,
       width: double.infinity,

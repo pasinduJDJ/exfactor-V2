@@ -1,33 +1,129 @@
 import 'package:flutter/material.dart';
 import 'package:exfactor/utils/colors.dart';
-import 'Sales/sales_update_deal.dart';
+import 'deal_details_update_screen.dart';
+import 'package:exfactor/services/dealService.dart';
 
 class DealDetails extends StatefulWidget {
-  const DealDetails({super.key});
+  final Map<String, dynamic>? dealData;
+
+  const DealDetails({super.key, this.dealData});
 
   @override
   State<DealDetails> createState() => _DealDetailsState();
 }
 
 class _DealDetailsState extends State<DealDetails> {
-  // Sample deal data - in real app this would come from API/database
-  final Map<String, String> dealData = {
-    'prospectName': 'ABC Product',
-    'dealSize': '254000',
-    'product': 'Odoo POS',
-    'createdDate': '2025-07-25',
-    'salesPerson': 'Mohan D',
-    'currentSolution': 'Manullay',
-  };
+  // Real deal data from database or default sample data
+  late Map<String, String> dealData;
+  late Map<String, String> contactData;
 
-  final Map<String, String> contactData = {
-    'country': 'Sri Lanka',
-    'city': 'Colombo',
-    'phoneNumber': '0767066455',
-    'mobileNumber': '0750750879',
-    'email': 'dp@exfysy.com',
-    'website': 'sdfwifjnwerg.com',
-  };
+  @override
+  void initState() {
+    super.initState();
+    _initializeData();
+  }
+
+  void _initializeData() {
+    if (widget.dealData != null) {
+      // Debug print to verify deal data
+      print('=== Deal Details Debug ===');
+      print('Received deal data: ${widget.dealData}');
+
+      // Use real deal data from database
+      dealData = {
+        'prospectName': widget.dealData!['prospect_name'] ?? 'N/A',
+        'dealSize': (widget.dealData!['deal_amount'] ?? 0).toString(),
+        'dealStatus': _formatDealStatus(widget.dealData!['deal_status']),
+        'product': widget.dealData!['product'] ?? 'N/A',
+        'createdDate': _formatDate(widget.dealData!['created_at']),
+        'salesPerson':
+            'Current User', // We can get this from user data if needed
+        'currentSolution': widget.dealData!['current_solution'] ?? 'N/A',
+      };
+
+      contactData = {
+        'country': widget.dealData!['country'] ?? 'N/A',
+        'city': widget.dealData!['city'] ?? 'N/A',
+        'phoneNumber': widget.dealData!['phone_number'] ?? 'N/A',
+        'mobileNumber': widget.dealData!['mobile_number'] ?? 'N/A',
+        'email': widget.dealData!['email'] ?? 'N/A',
+        'website': widget.dealData!['website'] ?? 'N/A',
+      };
+
+      print('Processed deal data: $dealData');
+      print('Processed contact data: $contactData');
+      print('========================');
+    } else {
+      // Fallback to sample data if no deal data provided
+      dealData = {
+        'prospectName': 'ABC Product',
+        'dealSize': '254000',
+        'dealStatus': 'Active',
+        'product': 'Odoo POS',
+        'createdDate': '2025-07-25',
+        'salesPerson': 'Mohan D',
+        'currentSolution': 'Manullay',
+      };
+
+      contactData = {
+        'country': 'Sri Lanka',
+        'city': 'Colombo',
+        'phoneNumber': '0767066455',
+        'mobileNumber': '0750750879',
+        'email': 'dp@exfysy.com',
+        'website': 'sdfwifjnwerg.com',
+      };
+    }
+  }
+
+  String _formatDate(String? dateString) {
+    if (dateString == null) return 'N/A';
+    try {
+      final date = DateTime.parse(dateString);
+      return '${date.day}/${date.month}/${date.year}';
+    } catch (e) {
+      return 'N/A';
+    }
+  }
+
+  String _formatDealStatus(String? status) {
+    if (status == null) return 'N/A';
+
+    // Map status values to display names
+    final statusMap = {
+      'active': 'Active',
+      'pending': 'Pending',
+      'in_progress': 'In Progress',
+      'negotiation': 'Negotiation',
+      'proposal_sent': 'Proposal Sent',
+      'closed': 'Closed',
+      'won': 'Won',
+      'lost': 'Lost',
+      'cancelled': 'Cancelled',
+    };
+
+    return statusMap[status.toLowerCase()] ?? status;
+  }
+
+  // Fetch latest deal data from database
+  Future<void> _refreshDealData() async {
+    if (widget.dealData != null && widget.dealData!['id'] != null) {
+      try {
+        final updatedDealData =
+            await DealService.getDealById(widget.dealData!['id']);
+        if (updatedDealData != null) {
+          // Update the widget's deal data with fresh data from database
+          widget.dealData!.clear();
+          widget.dealData!.addAll(updatedDealData);
+
+          // Re-initialize data with fresh data
+          _initializeData();
+        }
+      } catch (e) {
+        print('Error refreshing deal data: $e');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,17 +145,35 @@ class _DealDetailsState extends State<DealDetails> {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit, color: Colors.black),
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              final result = await Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const UpdateDeal()),
+                MaterialPageRoute(
+                  builder: (context) =>
+                      DealDetailsUpdate(dealData: widget.dealData),
+                ),
               );
+
+              // If update was successful, refresh the data
+              if (result == true) {
+                // Show success message
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Deal details refreshed successfully!'),
+                    backgroundColor: Colors.green,
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+
+                // Refresh data from database after returning from update screen
+                await _refreshDealData();
+              }
             },
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 15),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -68,7 +182,7 @@ class _DealDetailsState extends State<DealDetails> {
             // Deal Details Card
             _buildDealDetailsCard(),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
 
             // Contact Details Section
             const Text(
@@ -204,6 +318,8 @@ class _DealDetailsState extends State<DealDetails> {
         return 'Prospect Name:';
       case 'dealSize':
         return 'Deal Size:';
+      case 'dealStatus':
+        return 'Deal Status:';
       case 'product':
         return 'Product:';
       case 'createdDate':

@@ -3,20 +3,10 @@ import 'package:exfactor/models/user_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserService {
-  // Get all sales team members (users with role == 'sales')
+  // Get all sales team members (users with role == 'Sales')
   static Future<List<Map<String, dynamic>>> getSalesTeamMembers() async {
     try {
-      final allUsers = await SupabaseService.getAllUsers();
-
-      // Filter users with sales role
-      final salesMembers = allUsers.where((user) {
-        final role = (user['role'] ?? '').toString().toLowerCase();
-        return role == 'sales' ||
-            role == 'salesperson' ||
-            role == 'sales representative';
-      }).toList();
-
-      return salesMembers;
+      return await SupabaseService.getSalesTeamMembers();
     } catch (e) {
       print('Error fetching sales team members: $e');
       return [];

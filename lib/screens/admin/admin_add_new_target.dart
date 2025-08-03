@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:exfactor/utils/colors.dart';
 import 'package:exfactor/widgets/common/custom_button.dart';
-import 'package:exfactor/services/userService.dart';
+import 'package:exfactor/services/saleService.dart';
+import 'package:exfactor/models/target_model.dart';
 
 class AdminAddNewTarget extends StatefulWidget {
   const AdminAddNewTarget({super.key});
@@ -39,7 +40,7 @@ class _AdminAddNewTargetState extends State<AdminAddNewTarget> {
   Future<void> fetchSalesMembers() async {
     setState(() => isLoading = true);
     try {
-      final members = await UserService.getSalesTeamMembers();
+      final members = await SaleService.getSalesTeamMembers();
       setState(() {
         salesMembers = members;
         // Initialize controllers for each member
@@ -96,7 +97,8 @@ class _AdminAddNewTargetState extends State<AdminAddNewTarget> {
     final revenueTarget = double.tryParse(_revenueController.text) ?? 0;
     final totalMemberTarget = _getTotalMemberTarget();
 
-    if (totalMemberTarget > revenueTarget) {
+    if (!SaleService.validateTargetAssignment(
+        totalMemberTarget, revenueTarget)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Total member targets cannot exceed revenue target'),
@@ -115,17 +117,46 @@ class _AdminAddNewTargetState extends State<AdminAddNewTarget> {
     setState(() => isSubmitting = true);
 
     try {
-      // TODO: Implement actual submission to database
-      await Future.delayed(const Duration(seconds: 2)); // Simulate API call
+      final year = int.parse(_yearController.text);
+      final revenueTarget = double.parse(_revenueController.text);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Target added successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pop(context);
+      // Prepare member assignments
+      Map<String, double> memberAssignments = {};
+      for (var member in salesMembers) {
+        final memberId = member['user_id']; // Use UUID
+        final controller = memberControllers[member['member_id']];
+
+        if (controller != null && controller.text.isNotEmpty) {
+          memberAssignments[memberId] = double.parse(controller.text);
+        }
+      }
+
+      // Use SaleService to create and assign targets
+      final success = await SaleService.createAndAssignTargets(
+        year: year,
+        revenueTarget: revenueTarget,
+        memberAssignments: memberAssignments,
+      );
+
+      if (success) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Target added successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context);
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Error adding target. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -288,7 +319,7 @@ class _AdminAddNewTargetState extends State<AdminAddNewTarget> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${member['first_name'] ?? ''} ${member['last_name'] ?? ''}',
+                  '${member['first_name'] ?? ''} ',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -311,7 +342,7 @@ class _AdminAddNewTargetState extends State<AdminAddNewTarget> {
 
           // Amount Input
           SizedBox(
-            width: 120,
+            width: 180,
             child: TextFormField(
               controller: controller,
               keyboardType:

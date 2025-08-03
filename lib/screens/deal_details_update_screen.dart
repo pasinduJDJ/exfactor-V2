@@ -3,16 +3,17 @@ import 'package:exfactor/utils/colors.dart';
 import 'package:exfactor/widgets/common/custom_button.dart';
 import 'package:exfactor/services/dealService.dart';
 import 'package:exfactor/services/superbase_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class CreateDeal extends StatefulWidget {
-  const CreateDeal({super.key});
+class DealDetailsUpdate extends StatefulWidget {
+  final Map<String, dynamic>? dealData;
+
+  const DealDetailsUpdate({super.key, this.dealData});
 
   @override
-  State<CreateDeal> createState() => _CreateDealState();
+  State<DealDetailsUpdate> createState() => _DealDetailsUpdateState();
 }
 
-class _CreateDealState extends State<CreateDeal> {
+class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
   final _formKey = GlobalKey<FormState>();
 
   // Controllers for each field
@@ -28,27 +29,44 @@ class _CreateDealState extends State<CreateDeal> {
   final TextEditingController _currentSolutionController =
       TextEditingController();
 
-  // Auto-generated fields (read-only)
-  String _dealStatus = 'active';
-  DateTime _createdAt = DateTime.now();
-
+  // Deal status dropdown
+  String _selectedDealStatus = 'active';
   bool _isSubmitting = false;
 
   @override
   void initState() {
     super.initState();
-    _loadCurrentUserInfo();
+    _initializeData();
   }
 
-  Future<void> _loadCurrentUserInfo() async {
-    // This method is kept for future use if needed
-    // Currently we only need user_id which is handled in DealService
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final memberId = prefs.getInt('member_id');
-      print('Current member ID: $memberId');
-    } catch (e) {
-      print('Error loading user info: $e');
+  void _initializeData() {
+    // Debug logging
+    print('=== Deal Details Update Debug ===');
+    print('Received deal data: ${widget.dealData}');
+
+    if (widget.dealData != null) {
+      // Populate form fields with existing deal data
+      _prospectNameController.text = widget.dealData!['prospect_name'] ?? '';
+      _dealSizeController.text =
+          (widget.dealData!['deal_amount'] ?? 0).toString();
+      _productController.text = widget.dealData!['product'] ?? '';
+      _cityController.text = widget.dealData!['city'] ?? '';
+      _countryController.text = widget.dealData!['country'] ?? '';
+      _phoneController.text = widget.dealData!['phone_number'] ?? '';
+      _mobileController.text = widget.dealData!['mobile_number'] ?? '';
+      _emailController.text = widget.dealData!['email'] ?? '';
+      _websiteController.text = widget.dealData!['website'] ?? '';
+      _currentSolutionController.text =
+          widget.dealData!['current_solution'] ?? '';
+      _selectedDealStatus = widget.dealData!['deal_status'] ?? 'active';
+
+      print('Deal ID: ${widget.dealData!['id']}');
+      print('Prospect Name: ${widget.dealData!['prospect_name']}');
+      print('Deal Amount: ${widget.dealData!['deal_amount']}');
+      print('========================');
+    } else {
+      print('No deal data provided');
+      print('========================');
     }
   }
 
@@ -67,8 +85,12 @@ class _CreateDealState extends State<CreateDeal> {
     super.dispose();
   }
 
-  Future<void> _submitDeal() async {
+  Future<void> _updateDeal() async {
+    print('=== Starting Deal Update ===');
+    print('Deal Data: ${widget.dealData}');
+
     if (!_formKey.currentState!.validate()) {
+      print('Form validation failed');
       return;
     }
 
@@ -77,23 +99,7 @@ class _CreateDealState extends State<CreateDeal> {
     });
 
     try {
-      // Step 1: Validate user has assigned target
-      final hasAssignedTarget =
-          await DealService.validateUserHasAssignedTarget();
-      if (!hasAssignedTarget) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                  'No assigned target found for current year. Please contact admin.'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-        return;
-      }
-
-      // Step 2: Validate deal data using DealService
+      // Validate deal data using DealService
       final validationErrors = DealService.validateDealData(
         prospectName: _prospectNameController.text.trim(),
         dealSize: _dealSizeController.text.trim(),
@@ -125,8 +131,22 @@ class _CreateDealState extends State<CreateDeal> {
         return;
       }
 
-      // Create deal using DealService
-      final success = await DealService.createDeal(
+      // Check if deal data and ID are available
+      if (widget.dealData == null || widget.dealData!['id'] == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Error: Deal data not found. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Update deal using DealService
+      final success = await DealService.updateDeal(
+        dealId: widget.dealData!['id'],
         prospectName: _prospectNameController.text.trim(),
         dealSize: double.parse(_dealSizeController.text.trim()),
         product: _productController.text.trim(),
@@ -137,33 +157,41 @@ class _CreateDealState extends State<CreateDeal> {
         email: _emailController.text.trim(),
         website: _websiteController.text.trim(),
         currentSolution: _currentSolutionController.text.trim(),
+        dealStatus: _selectedDealStatus,
       );
 
       if (success) {
+        print('Deal updated successfully');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Deal created successfully!'),
+              content: Text('Data updated successfully!'),
               backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
             ),
           );
-          Navigator.pop(context);
+          // Wait a moment for the snackbar to show, then pop
+          await Future.delayed(const Duration(milliseconds: 500));
+          Navigator.pop(
+              context, true); // Pass true to indicate successful update
         }
       } else {
+        print('Failed to update deal');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Failed to create deal. Please try again.'),
+              content: Text('Failed to update deal. Please try again.'),
               backgroundColor: Colors.red,
             ),
           );
         }
       }
     } catch (e) {
+      print('Error updating deal: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error creating deal: $e'),
+            content: Text('Error updating deal: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -190,7 +218,7 @@ class _CreateDealState extends State<CreateDeal> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
-          'Create Deal',
+          'Update Deal',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -217,18 +245,22 @@ class _CreateDealState extends State<CreateDeal> {
               _buildTextField('Website', _websiteController),
               _buildTextField('Current Solution', _currentSolutionController),
 
-              // Auto-generated fields (read-only)
+              // Deal Status Dropdown
               const SizedBox(height: 16),
-              _buildReadOnlyField('Deal Status', _dealStatus),
-              _buildReadOnlyField('Created Date', _formatDate(_createdAt)),
+              _buildDealStatusDropdown(),
+
+              // Created Date (Read-only)
+              const SizedBox(height: 16),
+              _buildReadOnlyField(
+                  'Created Date', _formatDate(widget.dealData?['created_at'])),
 
               const SizedBox(height: 24),
               CustomButton(
-                text: _isSubmitting ? 'Creating Deal...' : 'New Deal Register',
+                text: _isSubmitting ? 'Updating Deal...' : 'Update Deal',
                 backgroundColor: kPrimaryColor,
                 width: double.infinity,
                 height: 48,
-                onPressed: () => _submitDeal(),
+                onPressed: () => _updateDeal(),
                 isLoading: _isSubmitting,
               ),
             ],
@@ -283,9 +315,57 @@ class _CreateDealState extends State<CreateDeal> {
     );
   }
 
+  Widget _buildDealStatusDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Deal Status',
+          style: TextStyle(fontSize: 14, color: Colors.black87),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.grey.shade300),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: _selectedDealStatus,
+              isExpanded: true,
+              items: DealService.getDealStatusOptions().map((String status) {
+                return DropdownMenuItem<String>(
+                  value: status,
+                  child: Text(DealService.getDealStatusDisplayNames()[status] ??
+                      status),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                if (newValue != null) {
+                  setState(() {
+                    _selectedDealStatus = newValue;
+                  });
+                }
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   // Helper method to format date
-  String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
+  String _formatDate(String? dateString) {
+    if (dateString == null) return 'N/A';
+    try {
+      final date = DateTime.parse(dateString);
+      return '${date.day}/${date.month}/${date.year}';
+    } catch (e) {
+      return 'N/A';
+    }
   }
 
   // Build read-only field widget

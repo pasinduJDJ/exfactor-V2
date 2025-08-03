@@ -1,9 +1,9 @@
+import 'package:exfactor/screens/Sales/sales_target_and_deal_tracking.dart';
 import 'package:exfactor/screens/login_page.dart';
 import 'package:exfactor/widgets/common/custom_app_bar_with_icon.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/common/base_layout.dart';
 import 'sales_home.dart';
-import 'sales_task_screen.dart';
 import '../notification_screen.dart';
 import '../profile.dart';
 import 'package:exfactor/models/user_model.dart';

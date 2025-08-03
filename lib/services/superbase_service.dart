@@ -4,6 +4,7 @@ import 'package:exfactor/models/notification_model.dart';
 import 'package:exfactor/models/task_model.dart';
 import 'package:exfactor/models/task_status_request_model.dart';
 import 'dart:io';
+import 'package:exfactor/models/target_model.dart';
 
 class SupabaseService {
   static final SupabaseClient _client = Supabase.instance.client;
@@ -424,5 +425,356 @@ class SupabaseService {
     await _client
         .from('user')
         .update({'profile_image': imageUrl}).eq('member_id', memberId);
+  }
+
+  // Target Management ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // Insert a new target
+  static Future<String> insertTarget(TargetModel target) async {
+    final targetData = target.toMap();
+    // Remove id if it's null to let database handle auto-increment
+    if (targetData['id'] == null) {
+      targetData.remove('id');
+    }
+
+    final response = await _client.from('targets').insert(targetData).select();
+    return response[0]['id']; // Return the created target ID
+  }
+
+  // Get all targets
+  static Future<List<Map<String, dynamic>>> getAllTargets() async {
+    try {
+      final response = await _client.from('targets').select();
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Error fetching targets: $e');
+      throw Exception('Failed to fetch targets: ${e.toString()}');
+    }
+  }
+
+  // Get target by year
+  static Future<Map<String, dynamic>?> getTargetByYear(int year) async {
+    try {
+      final yearDate = DateTime(year);
+      final response = await _client
+          .from('targets')
+          .select()
+          .eq('year', yearDate.toIso8601String().split('T')[0])
+          .maybeSingle();
+      return response;
+    } catch (e) {
+      print('Error fetching target by year: $e');
+      throw Exception('Failed to fetch target by year: ${e.toString()}');
+    }
+  }
+
+  // Get target by ID
+  static Future<Map<String, dynamic>?> getTargetById(String targetId) async {
+    try {
+      final response = await _client
+          .from('targets')
+          .select()
+          .eq('id', targetId)
+          .maybeSingle();
+      return response;
+    } catch (e) {
+      print('Error fetching target by ID: $e');
+      throw Exception('Failed to fetch target by ID: ${e.toString()}');
+    }
+  }
+
+  // Insert assigned target
+  static Future<String> insertAssignedTarget(
+      AssignedTargetModel assignedTarget) async {
+    final assignedTargetData = assignedTarget.toMap();
+    // Remove id if it's null to let database handle auto-increment
+    if (assignedTargetData['id'] == null) {
+      assignedTargetData.remove('id');
+    }
+
+    final response = await _client
+        .from('assigned_targets')
+        .insert(assignedTargetData)
+        .select();
+    return response[0]['id']; // Return the created assigned target ID
+  }
+
+  // Get assigned targets by annual target ID
+  static Future<List<Map<String, dynamic>>> getAssignedTargetsByAnnualTargetId(
+      String annualTargetId) async {
+    try {
+      final response = await _client
+          .from('assigned_targets')
+          .select()
+          .eq('annual_target_id', annualTargetId);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Error fetching assigned targets: $e');
+      throw Exception('Failed to fetch assigned targets: ${e.toString()}');
+    }
+  }
+
+  // Insert assigned monthly target
+  static Future<void> insertAssignedMonthlyTarget(
+      AssignedMonthlyTargetModel monthlyTarget) async {
+    final monthlyTargetData = monthlyTarget.toMap();
+    // Remove id if it's null to let database handle auto-increment
+    if (monthlyTargetData['id'] == null) {
+      monthlyTargetData.remove('id');
+    }
+
+    await _client.from('assigned_monthly_targets').insert(monthlyTargetData);
+  }
+
+  // Get assigned monthly targets by assigned target ID
+  static Future<List<Map<String, dynamic>>>
+      getAssignedMonthlyTargetsByAssignedTargetId(
+          String assignedTargetId) async {
+    try {
+      final response = await _client
+          .from('assigned_monthly_targets')
+          .select()
+          .eq('assigned_target_id', assignedTargetId);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Error fetching assigned monthly targets: $e');
+      throw Exception(
+          'Failed to fetch assigned monthly targets: ${e.toString()}');
+    }
+  }
+
+  // Get sales team members (users with role 'Sales')
+  static Future<List<Map<String, dynamic>>> getSalesTeamMembers() async {
+    try {
+      final response = await _client
+          .from('user')
+          .select(
+              'user_id, member_id, first_name, last_name, email, position, role')
+          .eq('role', 'Sales');
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Error fetching sales team members: $e');
+      throw Exception('Failed to fetch sales team members: ${e.toString()}');
+    }
+  }
+
+  // Get assigned targets for a specific user
+  static Future<List<Map<String, dynamic>>> getAssignedTargetsByUserId(
+      String userId) async {
+    try {
+      print('Querying assigned_targets for user_id: $userId');
+      final response =
+          await _client.from('assigned_targets').select().eq('user_id', userId);
+      print('Assigned targets response: $response');
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Error fetching assigned targets for user: $e');
+      throw Exception('Failed to fetch assigned targets: ${e.toString()}');
+    }
+  }
+
+  // Get current user's assigned targets with monthly breakdown
+  static Future<Map<String, dynamic>?> getCurrentUserAssignedTargets(
+      String userId) async {
+    try {
+      print('Fetching assigned targets for user: $userId');
+
+      // Get assigned targets for the user
+      final assignedTargets = await getAssignedTargetsByUserId(userId);
+      print('Found ${assignedTargets.length} assigned targets');
+
+      if (assignedTargets.isEmpty) {
+        print('No assigned targets found for user: $userId');
+        return null;
+      }
+
+      // Get the most recent assigned target (assuming one per year)
+      final latestAssignedTarget = assignedTargets.first;
+      final assignedTargetId = latestAssignedTarget['id'];
+      print('Latest assigned target ID: $assignedTargetId');
+
+      // Get monthly targets for this assigned target
+      final monthlyTargets =
+          await getAssignedMonthlyTargetsByAssignedTargetId(assignedTargetId);
+      print('Found ${monthlyTargets.length} monthly targets');
+
+      return {
+        'assigned_target': latestAssignedTarget,
+        'monthly_targets': monthlyTargets,
+      };
+    } catch (e) {
+      print('Error fetching current user assigned targets: $e');
+      throw Exception(
+          'Failed to fetch current user assigned targets: ${e.toString()}');
+    }
+  }
+
+  // Get deals for a specific user
+  static Future<List<Map<String, dynamic>>> getDealsByUserId(
+      String userId) async {
+    try {
+      final response =
+          await _client.from('deals').select().eq('user_id', userId);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Error fetching deals for user: $e');
+      throw Exception('Failed to fetch deals: ${e.toString()}');
+    }
+  }
+
+  // Get deals by assigned target ID
+  static Future<List<Map<String, dynamic>>> getDealsByAssignedTargetId(
+      String assignedTargetId) async {
+    try {
+      final response = await _client
+          .from('deals')
+          .select()
+          .eq('assigned_target_id', assignedTargetId);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Error fetching deals by assigned target ID: $e');
+      throw Exception(
+          'Failed to fetch deals by assigned target ID: ${e.toString()}');
+    }
+  }
+
+  // Calculate achieved sales for a user
+  static Future<Map<String, double>> calculateUserAchievedSales(
+      String userId) async {
+    try {
+      final deals = await getDealsByUserId(userId);
+
+      double totalAchieved = 0;
+      double monthlyAchieved = 0;
+      double quarterlyAchieved = 0;
+      double annualAchieved = 0;
+
+      final now = DateTime.now();
+      final currentMonth = now.month;
+      final currentQuarter = ((currentMonth - 1) / 3).floor() + 1;
+      final currentYear = now.year;
+
+      for (final deal in deals) {
+        final dealAmount = (deal['deal_amount'] ?? 0).toDouble();
+        final dealStatus = deal['deal_status'] ?? '';
+
+        // Only count closed/won deals
+        if (dealStatus.toLowerCase() == 'closed' ||
+            dealStatus.toLowerCase() == 'won' ||
+            dealStatus.toLowerCase() == 'completed') {
+          totalAchieved += dealAmount;
+
+          // Check if deal is from current year
+          final dealDate = deal['created_at'] != null
+              ? DateTime.parse(deal['created_at'])
+              : now;
+
+          if (dealDate.year == currentYear) {
+            annualAchieved += dealAmount;
+
+            // Check if deal is from current quarter
+            final dealQuarter = ((dealDate.month - 1) / 3).floor() + 1;
+            if (dealQuarter == currentQuarter) {
+              quarterlyAchieved += dealAmount;
+            }
+
+            // Check if deal is from current month
+            if (dealDate.month == currentMonth) {
+              monthlyAchieved += dealAmount;
+            }
+          }
+        }
+      }
+
+      return {
+        'total': totalAchieved,
+        'monthly': monthlyAchieved,
+        'quarterly': quarterlyAchieved,
+        'annual': annualAchieved,
+      };
+    } catch (e) {
+      print('Error calculating user achieved sales: $e');
+      return {
+        'total': 0,
+        'monthly': 0,
+        'quarterly': 0,
+        'annual': 0,
+      };
+    }
+  }
+
+  // Deal Management ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // Insert a new deal
+  static Future<void> insertDeal(Map<String, dynamic> dealData) async {
+    try {
+      await _client.from('deals').insert(dealData);
+      print('Deal inserted successfully');
+    } catch (e) {
+      print('Error inserting deal: $e');
+      throw Exception('Failed to insert deal: ${e.toString()}');
+    }
+  }
+
+  // Get deal by ID
+  static Future<Map<String, dynamic>?> getDealById(String dealId) async {
+    try {
+      final response =
+          await _client.from('deals').select().eq('id', dealId).maybeSingle();
+      return response;
+    } catch (e) {
+      print('Error fetching deal by ID: $e');
+      throw Exception('Failed to fetch deal: ${e.toString()}');
+    }
+  }
+
+  // Update deal
+  static Future<void> updateDeal(
+      String dealId, Map<String, dynamic> updatedData) async {
+    try {
+      await _client.from('deals').update(updatedData).eq('id', dealId);
+      print('Deal updated successfully');
+    } catch (e) {
+      print('Error updating deal: $e');
+      throw Exception('Failed to update deal: ${e.toString()}');
+    }
+  }
+
+  // Update deal status
+  static Future<void> updateDealStatus(String dealId, String newStatus) async {
+    try {
+      await _client.from('deals').update({
+        'deal_status': newStatus,
+      }).eq('id', dealId);
+      print('Deal status updated successfully');
+    } catch (e) {
+      print('Error updating deal status: $e');
+      throw Exception('Failed to update deal status: ${e.toString()}');
+    }
+  }
+
+  // Delete deal
+  static Future<void> deleteDeal(String dealId) async {
+    try {
+      await _client.from('deals').delete().eq('id', dealId);
+      print('Deal deleted successfully');
+    } catch (e) {
+      print('Error deleting deal: $e');
+      throw Exception('Failed to delete deal: ${e.toString()}');
+    }
+  }
+
+  // Update assigned target achieved amount
+  static Future<void> updateAssignedTargetAchievedAmount(
+      String assignedTargetId, double achievedAmount) async {
+    try {
+      await _client.from('assigned_targets').update(
+          {'achieved_amount': achievedAmount}).eq('id', assignedTargetId);
+      print('Assigned target achieved amount updated successfully');
+    } catch (e) {
+      print('Error updating assigned target achieved amount: $e');
+      throw Exception(
+          'Failed to update assigned target achieved amount: ${e.toString()}');
+    }
   }
 }
