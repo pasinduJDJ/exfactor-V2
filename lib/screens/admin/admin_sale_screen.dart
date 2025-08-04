@@ -1,8 +1,11 @@
 import 'package:exfactor/screens/admin/admin_add_new_target.dart';
+import 'package:exfactor/screens/admin/admin_update_target.dart';
+import 'package:exfactor/screens/sales_member_sales_track_sceen.dart';
 import 'package:flutter/material.dart';
 import 'package:exfactor/utils/colors.dart';
 import 'package:exfactor/widgets/common/custom_button.dart';
 import 'package:exfactor/services/userService.dart';
+import 'package:exfactor/services/saleService.dart';
 
 class AdminSaleScreen extends StatefulWidget {
   const AdminSaleScreen({super.key});
@@ -14,11 +17,16 @@ class AdminSaleScreen extends StatefulWidget {
 class _AdminSaleScreenState extends State<AdminSaleScreen> {
   List<Map<String, dynamic>> salesTeamMembers = [];
   bool isLoading = true;
+  bool isLoadingSalesData = true;
+
+  // Company sales data
+  Map<String, dynamic>? companySalesProgress;
 
   @override
   void initState() {
     super.initState();
     fetchSalesTeamMembers();
+    fetchCompanySalesData();
   }
 
   Future<void> fetchSalesTeamMembers() async {
@@ -32,6 +40,25 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
     } catch (e) {
       setState(() => isLoading = false);
     }
+  }
+
+  Future<void> fetchCompanySalesData() async {
+    setState(() => isLoadingSalesData = true);
+    try {
+      final progress = await SaleService.getCompanySalesProgress();
+      setState(() {
+        companySalesProgress = progress;
+        isLoadingSalesData = false;
+      });
+    } catch (e) {
+      print('Error fetching company sales data: $e');
+      setState(() => isLoadingSalesData = false);
+    }
+  }
+
+  // Format currency values
+  String _formatCurrency(double amount) {
+    return '\$${amount.toStringAsFixed(0)}';
   }
 
   @override
@@ -77,29 +104,40 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
             children: [
               _buildSalesCard(
                 title: "Annual Sales",
-                percentage: 42.8,
-                dealValue: "100,000",
-                targetValue: "400,000",
+                percentage: companySalesProgress?['progress']?['annual'] ?? 0.0,
+                dealValue: _formatCurrency(
+                    companySalesProgress?['achieved']?['annual'] ?? 0),
+                targetValue: _formatCurrency(
+                    companySalesProgress?['targets']?['annual'] ?? 0),
                 color: cardDarkRed,
                 cardWidth: 200,
+                isLoading: isLoadingSalesData,
               ),
               const SizedBox(width: 16),
               _buildSalesCard(
                 title: "Quarterly Sales",
-                percentage: 78.6,
-                dealValue: "100,000",
-                targetValue: "400,000",
+                percentage:
+                    companySalesProgress?['progress']?['quarterly'] ?? 0.0,
+                dealValue: _formatCurrency(
+                    companySalesProgress?['achieved']?['quarterly'] ?? 0),
+                targetValue: _formatCurrency(
+                    companySalesProgress?['targets']?['quarterly'] ?? 0),
                 color: cardYellow,
                 cardWidth: 200,
+                isLoading: isLoadingSalesData,
               ),
               const SizedBox(width: 16),
               _buildSalesCard(
                 title: "Monthly Sales",
-                percentage: 86.5,
-                dealValue: "100,000",
-                targetValue: "400,000",
+                percentage:
+                    companySalesProgress?['progress']?['monthly'] ?? 0.0,
+                dealValue: _formatCurrency(
+                    companySalesProgress?['achieved']?['monthly'] ?? 0),
+                targetValue: _formatCurrency(
+                    companySalesProgress?['targets']?['monthly'] ?? 0),
                 color: cardDarkGreen,
                 cardWidth: 200,
+                isLoading: isLoadingSalesData,
               ),
             ],
           ),
@@ -115,6 +153,7 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
     required String targetValue,
     required Color color,
     required double cardWidth,
+    required bool isLoading,
   }) {
     return Container(
       height: 720,
@@ -123,10 +162,6 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        // border: Border.all(
-        //   color: const Color.fromARGB(255, 121, 121, 121),
-        //   width: 1,
-        // ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.3),
@@ -171,19 +206,23 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
                   ),
                 ),
 
-                // Beautiful progress circle with gradient
-                SizedBox(
-                  width: 180,
-                  height: 180,
-                  child: CustomPaint(
-                    painter: RoundedProgressPainter(
-                      progress: percentage / 100,
-                      strokeWidth: 30,
-                      backgroundColor: Colors.grey[200]!,
-                      progressColor: color,
+                // Loading indicator or progress circle
+                if (isLoading)
+                  const CircularProgressIndicator()
+                else
+                  // Beautiful progress circle with gradient
+                  SizedBox(
+                    width: 180,
+                    height: 180,
+                    child: CustomPaint(
+                      painter: RoundedProgressPainter(
+                        progress: percentage / 100,
+                        strokeWidth: 30,
+                        backgroundColor: Colors.grey[200]!,
+                        progressColor: color,
+                      ),
                     ),
                   ),
-                ),
 
                 // Inner circle for depth effect
                 Container(
@@ -203,33 +242,20 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
                 ),
 
                 // Percentage text with shadow
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    // boxShadow: [
-                    //   BoxShadow(
-                    //     color: color.withOpacity(0.3),
-                    //     blurRadius: 4,
-                    //     offset: const Offset(0, 2),
-                    //   ),
-                    // ],
-                  ),
-                  child: Text(
-                    "${percentage.toStringAsFixed(1)}%",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                      // shadows: [
-                      //   Shadow(
-                      //     color: color.withOpacity(0.5),
-                      //     blurRadius: 2,
-                      //     offset: const Offset(0, 1),
-                      //   ),
-                      // ],
+                if (!isLoading)
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      "${percentage.toStringAsFixed(1)}%",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
@@ -253,7 +279,7 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      "Deal:",
+                      "Achieve Sales:",
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -275,7 +301,7 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      "Target:",
+                      "Target sales:",
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -305,9 +331,12 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
       children: [
         CustomButton(
           text: "Add New Target",
-          onPressed: () {
-            Navigator.of(context).push(
+          onPressed: () async {
+            final result = await Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => AdminAddNewTarget()));
+            if (result == true) {
+              fetchCompanySalesData();
+            }
           },
           backgroundColor: kPrimaryColor,
           width: double.infinity,
@@ -317,14 +346,32 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
         const SizedBox(height: 12),
         CustomButton(
           text: "Update Target",
-          onPressed: () {
-            // TODO: Navigate to Update Target screen
-            print('Update Target pressed');
+          onPressed: () async {
+            final result = await Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => AdminUpdateTarget()));
+
+            // Refresh data after returning from update target screen
+            if (result == true) {
+              fetchCompanySalesData();
+            }
           },
           backgroundColor: kPrimaryColor,
           width: double.infinity,
           height: 48,
           icon: const Icon(Icons.check),
+        ),
+        const SizedBox(height: 12),
+        CustomButton(
+          text: "Refresh Data",
+          onPressed: () {
+            fetchCompanySalesData();
+            fetchSalesTeamMembers();
+          },
+          textColor: Color.fromARGB(255, 0, 0, 0),
+          backgroundColor: Color.fromARGB(255, 255, 255, 255),
+          width: double.infinity,
+          height: 48,
+          icon: const Icon(Icons.refresh),
         ),
       ],
     );
@@ -385,68 +432,81 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
                         return Column(
                           children: [
                             // Member Row
-                            Row(
-                              children: [
-                                // Member Info
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        '${member['first_name'] ?? ''} ${member['last_name'] ?? ''}',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        member['position'] ??
-                                            'Sales Representative',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.grey[600],
-                                        ),
-                                      ),
-                                    ],
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => MemberSalesTrack(
+                                      memberId: member['member_id'].toString(),
+                                      memberName:
+                                          '${member['first_name'] ?? ''} ${member['last_name'] ?? ''}',
+                                    ),
                                   ),
-                                ),
-
-                                // Profile Picture Placeholder
-                                Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Colors.grey[300],
-                                  ),
-                                  child: member['profile_image'] != null &&
-                                          member['profile_image']
-                                              .toString()
-                                              .isNotEmpty
-                                      ? ClipOval(
-                                          child: Image.network(
-                                            member['profile_image'],
-                                            fit: BoxFit.cover,
-                                            errorBuilder:
-                                                (context, error, stackTrace) {
-                                              return Icon(
-                                                Icons.person,
-                                                color: Colors.grey[600],
-                                                size: 20,
-                                              );
-                                            },
+                                );
+                              },
+                              child: Row(
+                                children: [
+                                  // Member Info
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '${member['first_name'] ?? ''} ${member['last_name'] ?? ''}',
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black,
                                           ),
-                                        )
-                                      : Icon(
-                                          Icons.person,
-                                          color: Colors.grey[600],
-                                          size: 20,
                                         ),
-                                ),
-                              ],
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          member['position'] ??
+                                              'Sales Representative',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  // Profile Picture Placeholder
+                                  Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.grey[300],
+                                    ),
+                                    child: member['profile_image'] != null &&
+                                            member['profile_image']
+                                                .toString()
+                                                .isNotEmpty
+                                        ? ClipOval(
+                                            child: Image.network(
+                                              member['profile_image'],
+                                              fit: BoxFit.cover,
+                                              errorBuilder:
+                                                  (context, error, stackTrace) {
+                                                return Icon(
+                                                  Icons.person,
+                                                  color: Colors.grey[600],
+                                                  size: 20,
+                                                );
+                                              },
+                                            ),
+                                          )
+                                        : Icon(
+                                            Icons.person,
+                                            color: Colors.grey[600],
+                                            size: 20,
+                                          ),
+                                  ),
+                                ],
+                              ),
                             ),
 
                             // Divider (except for last item)

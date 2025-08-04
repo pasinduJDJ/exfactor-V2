@@ -370,4 +370,317 @@ class SaleService {
       };
     }
   }
+
+  // ===== ADMIN COMPANY-WIDE SALES TRACKING METHODS =====
+
+  // Get company targets for current year
+  static Future<Map<String, double>> getCompanyTargets() async {
+    try {
+      final currentYear = DateTime.now().year;
+      final targets = await SupabaseService.getAllTargets();
+
+      // Find target for current year
+      Map<String, dynamic>? currentYearTarget;
+      for (final target in targets) {
+        final targetYear = DateTime.parse(target['year']).year;
+        if (targetYear == currentYear) {
+          currentYearTarget = target;
+          break;
+        }
+      }
+
+      if (currentYearTarget == null) {
+        print('No target found for current year: $currentYear');
+        return _getDefaultCompanyTargets();
+      }
+
+      final annualTarget = (currentYearTarget['amount'] ?? 0).toDouble();
+      final quarterlyTarget = annualTarget / 4;
+      final monthlyTarget = annualTarget / 12;
+
+      return {
+        'annual': annualTarget,
+        'quarterly': quarterlyTarget,
+        'monthly': monthlyTarget,
+      };
+    } catch (e) {
+      print('Error getting company targets: $e');
+      return _getDefaultCompanyTargets();
+    }
+  }
+
+  // Get company achieved sales (all deals from all users)
+  static Future<Map<String, double>> getCompanyAchievedSales() async {
+    try {
+      final currentYear = DateTime.now().year;
+      final currentMonth = DateTime.now().month;
+      final currentQuarter = ((currentMonth - 1) / 3).floor() + 1;
+
+      // Get all deals from database
+      final allDeals = await SupabaseService.getAllDeals();
+
+      double annualAchieved = 0;
+      double quarterlyAchieved = 0;
+      double monthlyAchieved = 0;
+
+      for (final deal in allDeals) {
+        final dealAmount = (deal['deal_amount'] ?? 0).toDouble();
+        final dealDate = deal['created_at'] != null
+            ? DateTime.parse(deal['created_at'])
+            : DateTime.now();
+
+        // Check if deal is from current year
+        if (dealDate.year == currentYear) {
+          annualAchieved += dealAmount;
+
+          // Check if deal is from current quarter
+          final dealQuarter = ((dealDate.month - 1) / 3).floor() + 1;
+          if (dealQuarter == currentQuarter) {
+            quarterlyAchieved += dealAmount;
+          }
+
+          // Check if deal is from current month
+          if (dealDate.month == currentMonth) {
+            monthlyAchieved += dealAmount;
+          }
+        }
+      }
+
+      return {
+        'annual': annualAchieved,
+        'quarterly': quarterlyAchieved,
+        'monthly': monthlyAchieved,
+      };
+    } catch (e) {
+      print('Error getting company achieved sales: $e');
+      return _getDefaultCompanyAchievedSales();
+    }
+  }
+
+  // Get company sales progress (targets vs achieved)
+  static Future<Map<String, dynamic>> getCompanySalesProgress() async {
+    try {
+      final targets = await getCompanyTargets();
+      final achieved = await getCompanyAchievedSales();
+
+      final annualProgress =
+          calculateProgress(achieved['annual'] ?? 0, targets['annual'] ?? 0);
+      final quarterlyProgress = calculateProgress(
+          achieved['quarterly'] ?? 0, targets['quarterly'] ?? 0);
+      final monthlyProgress =
+          calculateProgress(achieved['monthly'] ?? 0, targets['monthly'] ?? 0);
+
+      return {
+        'targets': targets,
+        'achieved': achieved,
+        'progress': {
+          'annual': annualProgress,
+          'quarterly': quarterlyProgress,
+          'monthly': monthlyProgress,
+        },
+      };
+    } catch (e) {
+      print('Error getting company sales progress: $e');
+      return {
+        'targets': _getDefaultCompanyTargets(),
+        'achieved': _getDefaultCompanyAchievedSales(),
+        'progress': {
+          'annual': 0.0,
+          'quarterly': 0.0,
+          'monthly': 0.0,
+        },
+      };
+    }
+  }
+
+  // Get default company targets (when no data available)
+  static Map<String, double> _getDefaultCompanyTargets() {
+    return {
+      'annual': 0,
+      'quarterly': 0,
+      'monthly': 0,
+    };
+  }
+
+  // Get default company achieved sales (when no data available)
+  static Map<String, double> _getDefaultCompanyAchievedSales() {
+    return {
+      'annual': 0,
+      'quarterly': 0,
+      'monthly': 0,
+    };
+  }
+
+  // ===== MEMBER-SPECIFIC SALES TRACKING METHODS =====
+
+  // Get specific member's assigned targets
+  static Future<Map<String, dynamic>?> getMemberAssignedTargets(
+      String memberId) async {
+    try {
+      // Get member's UUID
+      final userData =
+          await SupabaseService.getUserByMemberId(int.parse(memberId));
+      if (userData == null) {
+        print('No user data found for member ID: $memberId');
+        return null;
+      }
+
+      final userId = userData['user_id'];
+      print('Member UUID: $userId');
+
+      // Get assigned targets for this member
+      final assignedTargets =
+          await SupabaseService.getCurrentUserAssignedTargets(userId);
+      print('Member assigned targets: $assignedTargets');
+
+      return assignedTargets;
+    } catch (e) {
+      print('Error loading member assigned targets: $e');
+      return null;
+    }
+  }
+
+  // Get specific member's achieved sales (ALL deals regardless of status)
+  static Future<Map<String, double>> getMemberAchievedSales(
+      String memberId) async {
+    try {
+      // Get member's UUID
+      final userData =
+          await SupabaseService.getUserByMemberId(int.parse(memberId));
+      if (userData == null) {
+        print('No user data found for member ID: $memberId');
+        return _getDefaultAchievedSales();
+      }
+
+      final userId = userData['user_id'];
+      print('Member UUID: $userId');
+
+      // Get all deals for this member
+      final deals = await SupabaseService.getDealsByUserId(userId);
+      print('All deals for member: ${deals.length}');
+
+      double totalRegistered = 0;
+      double monthlyRegistered = 0;
+      double quarterlyRegistered = 0;
+      double annualRegistered = 0;
+
+      final now = DateTime.now();
+      final currentMonth = now.month;
+      final currentQuarter = ((currentMonth - 1) / 3).floor() + 1;
+      final currentYear = now.year;
+
+      for (final deal in deals) {
+        final dealAmount = (deal['deal_amount'] ?? 0).toDouble();
+        final dealDate = deal['created_at'] != null
+            ? DateTime.parse(deal['created_at'])
+            : now;
+
+        // Count ALL deals regardless of status
+        totalRegistered += dealAmount;
+
+        // Check if deal is from current year
+        if (dealDate.year == currentYear) {
+          annualRegistered += dealAmount;
+
+          // Check if deal is from current quarter
+          final dealQuarter = ((dealDate.month - 1) / 3).floor() + 1;
+          if (dealQuarter == currentQuarter) {
+            quarterlyRegistered += dealAmount;
+          }
+
+          // Check if deal is from current month
+          if (dealDate.month == currentMonth) {
+            monthlyRegistered += dealAmount;
+          }
+        }
+      }
+
+      final result = {
+        'total': totalRegistered,
+        'monthly': monthlyRegistered,
+        'quarterly': quarterlyRegistered,
+        'annual': annualRegistered,
+      };
+
+      print('Member all registered sales: $result');
+      return result;
+    } catch (e) {
+      print('Error loading member achieved sales: $e');
+      return _getDefaultAchievedSales();
+    }
+  }
+
+  // Get specific member's deals categorized by period
+  static Future<Map<String, List<Map<String, dynamic>>>> getMemberDealsByPeriod(
+      String memberId) async {
+    try {
+      // Get member's UUID
+      final userData =
+          await SupabaseService.getUserByMemberId(int.parse(memberId));
+      if (userData == null) {
+        print('No user data found for member ID: $memberId');
+        return _getDefaultDealsByPeriod();
+      }
+
+      final userId = userData['user_id'];
+      print('Member UUID: $userId');
+
+      // Get all deals for this member
+      final deals = await SupabaseService.getDealsByUserId(userId);
+      print('All deals for member: ${deals.length}');
+
+      // Categorize deals by period
+      return _categorizeDealsByPeriod(deals);
+    } catch (e) {
+      print('Error loading member deals by period: $e');
+      return _getDefaultDealsByPeriod();
+    }
+  }
+
+  // Categorize deals by time period
+  static Map<String, List<Map<String, dynamic>>> _categorizeDealsByPeriod(
+    List<Map<String, dynamic>> deals,
+  ) {
+    final now = DateTime.now();
+    final currentMonth = now.month;
+    final currentYear = now.year;
+    final currentQuarter = ((currentMonth - 1) / 3).floor() + 1;
+
+    List<Map<String, dynamic>> thisMonthDeals = [];
+    List<Map<String, dynamic>> thisQuarterDeals = [];
+    List<Map<String, dynamic>> thisYearDeals = [];
+
+    for (final deal in deals) {
+      final createdAt =
+          deal['created_at'] != null ? DateTime.parse(deal['created_at']) : now;
+
+      if (createdAt.year == currentYear) {
+        thisYearDeals.add(deal);
+
+        if (createdAt.month == currentMonth) {
+          thisMonthDeals.add(deal);
+        }
+
+        final dealQuarter = ((createdAt.month - 1) / 3).floor() + 1;
+        if (dealQuarter == currentQuarter) {
+          thisQuarterDeals.add(deal);
+        }
+      }
+    }
+
+    return {
+      'monthly': thisMonthDeals,
+      'quarterly': thisQuarterDeals,
+      'annual': thisYearDeals,
+    };
+  }
+
+  // Get default deals by period (when no data available)
+  static Map<String, List<Map<String, dynamic>>> _getDefaultDealsByPeriod() {
+    return {
+      'monthly': [],
+      'quarterly': [],
+      'annual': [],
+    };
+  }
 }

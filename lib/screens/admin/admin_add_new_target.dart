@@ -146,7 +146,7 @@ class _AdminAddNewTargetState extends State<AdminAddNewTarget> {
               backgroundColor: Colors.green,
             ),
           );
-          Navigator.pop(context);
+          Navigator.pop(context, true); // Return true to indicate success
         }
       } else {
         if (mounted) {

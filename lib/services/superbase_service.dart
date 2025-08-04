@@ -638,6 +638,57 @@ class SupabaseService {
     }
   }
 
+  // Get all deals (for admin company-wide tracking)
+  static Future<List<Map<String, dynamic>>> getAllDeals() async {
+    try {
+      final response = await _client.from('deals').select();
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Error fetching all deals: $e');
+      throw Exception('Failed to fetch all deals: ${e.toString()}');
+    }
+  }
+
+  // Update target
+  static Future<void> updateTarget(
+      String targetId, Map<String, dynamic> updatedData) async {
+    try {
+      await _client.from('targets').update(updatedData).eq('id', targetId);
+    } catch (e) {
+      print('Error updating target: $e');
+      throw Exception('Failed to update target: ${e.toString()}');
+    }
+  }
+
+  // Update assigned target
+  static Future<void> updateAssignedTarget(
+      String assignedTargetId, Map<String, dynamic> updatedData) async {
+    try {
+      await _client
+          .from('assigned_targets')
+          .update(updatedData)
+          .eq('id', assignedTargetId);
+    } catch (e) {
+      print('Error updating assigned target: $e');
+      throw Exception('Failed to update assigned target: ${e.toString()}');
+    }
+  }
+
+  // Update assigned monthly target
+  static Future<void> updateAssignedMonthlyTarget(
+      String monthlyTargetId, Map<String, dynamic> updatedData) async {
+    try {
+      await _client
+          .from('assigned_monthly_targets')
+          .update(updatedData)
+          .eq('id', monthlyTargetId);
+    } catch (e) {
+      print('Error updating assigned monthly target: $e');
+      throw Exception(
+          'Failed to update assigned monthly target: ${e.toString()}');
+    }
+  }
+
   // Calculate achieved sales for a user
   static Future<Map<String, double>> calculateUserAchievedSales(
       String userId) async {
