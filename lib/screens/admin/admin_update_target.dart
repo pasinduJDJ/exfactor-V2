@@ -309,7 +309,7 @@ class _AdminUpdateTargetState extends State<AdminUpdateTarget> {
                             return DropdownMenuItem<Map<String, dynamic>>(
                               value: target,
                               child: Text(
-                                  'Year $year - \$${(target['amount'] ?? 0).toStringAsFixed(0)}'),
+                                  'Year $year - LKR ${(target['amount'] ?? 0).toStringAsFixed(2)}'),
                             );
                           }).toList(),
                           onChanged: (Map<String, dynamic>? newValue) {

@@ -85,7 +85,7 @@ class _MemberSalesTrackState extends State<MemberSalesTrack> {
 
   // Format currency values
   String _formatCurrency(double amount) {
-    return '\$${amount.toStringAsFixed(0)}';
+    return 'LKR ${amount.toStringAsFixed(2)}';
   }
 
   @override
@@ -664,7 +664,7 @@ class _DealListWidgetState extends State<_DealListWidget> {
   }
 
   String _formatCurrency(double amount) {
-    return '\$${amount.toStringAsFixed(0)}';
+    return 'LKR ${amount.toStringAsFixed(2)}';
   }
 }
 

@@ -165,8 +165,8 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
               _buildSalesCard(
                 title: "Annual Sales",
                 percentage: _calculateProgress(annualAchieved, annualTarget),
-                dealValue: annualAchieved.toStringAsFixed(0),
-                targetValue: annualTarget.toStringAsFixed(0),
+                dealValue: 'LKR ${annualAchieved.toStringAsFixed(2)}',
+                targetValue: 'LKR ${annualTarget.toStringAsFixed(2)}',
                 color: cardDarkRed,
                 cardWidth: 200,
               ),
@@ -175,8 +175,8 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
                 title: "Quarterly Sales",
                 percentage:
                     _calculateProgress(quarterlyAchieved, quarterlyTarget),
-                dealValue: quarterlyAchieved.toStringAsFixed(0),
-                targetValue: quarterlyTarget.toStringAsFixed(0),
+                dealValue: 'LKR ${quarterlyAchieved.toStringAsFixed(2)}',
+                targetValue: 'LKR ${quarterlyTarget.toStringAsFixed(2)}',
                 color: cardYellow,
                 cardWidth: 200,
               ),
@@ -184,8 +184,8 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
               _buildSalesCard(
                 title: "Monthly Sales",
                 percentage: _calculateProgress(monthlyAchieved, monthlyTarget),
-                dealValue: monthlyAchieved.toStringAsFixed(0),
-                targetValue: monthlyTarget.toStringAsFixed(0),
+                dealValue: 'LKR ${monthlyAchieved.toStringAsFixed(2)}',
+                targetValue: 'LKR ${monthlyTarget.toStringAsFixed(2)}',
                 color: cardDarkGreen,
                 cardWidth: 200,
               ),
@@ -411,14 +411,14 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
           const SizedBox(height: 16),
 
           // Sales metrics
-          _buildSalesMetric(
-              "Sales Target:", monthlyTarget.toStringAsFixed(0), false),
+          _buildSalesMetric("Sales Target:",
+              'LKR ${monthlyTarget.toStringAsFixed(2)}', false),
           const SizedBox(height: 8),
-          _buildSalesMetric(
-              "Registered Sales:", monthlyAchieved.toStringAsFixed(0), false),
+          _buildSalesMetric("Registered Sales:",
+              'LKR ${monthlyAchieved.toStringAsFixed(2)}', false),
           const SizedBox(height: 8),
-          _buildSalesMetric(
-              "Remaining Sales:", remainingSales.toStringAsFixed(0), true),
+          _buildSalesMetric("Remaining Sales:",
+              'LKR ${remainingSales.toStringAsFixed(2)}', true),
         ],
       ),
     );

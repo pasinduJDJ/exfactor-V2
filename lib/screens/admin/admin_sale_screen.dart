@@ -58,7 +58,7 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
 
   // Format currency values
   String _formatCurrency(double amount) {
-    return '\$${amount.toStringAsFixed(0)}';
+    return 'LKR ${amount.toStringAsFixed(2)}';
   }
 
   @override

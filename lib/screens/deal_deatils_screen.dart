@@ -32,7 +32,8 @@ class _DealDetailsState extends State<DealDetails> {
       // Use real deal data from database
       dealData = {
         'prospectName': widget.dealData!['prospect_name'] ?? 'N/A',
-        'dealSize': (widget.dealData!['deal_amount'] ?? 0).toString(),
+        'dealSize':
+            'LKR ${(widget.dealData!['deal_amount'] ?? 0).toStringAsFixed(2)}',
         'dealStatus': _formatDealStatus(widget.dealData!['deal_status']),
         'product': widget.dealData!['product'] ?? 'N/A',
         'createdDate': _formatDate(widget.dealData!['created_at']),
@@ -57,7 +58,7 @@ class _DealDetailsState extends State<DealDetails> {
       // Fallback to sample data if no deal data provided
       dealData = {
         'prospectName': 'ABC Product',
-        'dealSize': '254000',
+        'dealSize': 'LKR 254000.00',
         'dealStatus': 'Active',
         'product': 'Odoo POS',
         'createdDate': '2025-07-25',

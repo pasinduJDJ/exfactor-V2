@@ -184,7 +184,7 @@ class _SalesTaskScreenState extends State<SalesTaskScreen> {
             children: [
               _buildSalesAnalyzeCard(
                 title: "Monthly Sales Analyze",
-                salesTarget: monthlyTarget.toStringAsFixed(0),
+                salesTarget: 'LKR ${monthlyTarget.toStringAsFixed(2)}',
                 registeredClients: latestDeals
                     .where((deal) {
                       final dealDate = DateTime.parse(deal['created_at']);
@@ -194,13 +194,14 @@ class _SalesTaskScreenState extends State<SalesTaskScreen> {
                     })
                     .length
                     .toString(),
-                registeredSales: monthlyRegisteredSales.toStringAsFixed(0),
-                remainingSales: monthlyRemaining.toStringAsFixed(0),
+                registeredSales:
+                    'LKR ${monthlyRegisteredSales.toStringAsFixed(2)}',
+                remainingSales: 'LKR ${monthlyRemaining.toStringAsFixed(2)}',
               ),
               const SizedBox(width: 16),
               _buildSalesAnalyzeCard(
                 title: "Quarterly Sales Analyze",
-                salesTarget: quarterlyTarget.toStringAsFixed(0),
+                salesTarget: 'LKR ${quarterlyTarget.toStringAsFixed(2)}',
                 registeredClients: latestDeals
                     .where((deal) {
                       final dealDate = DateTime.parse(deal['created_at']);
@@ -213,13 +214,14 @@ class _SalesTaskScreenState extends State<SalesTaskScreen> {
                     })
                     .length
                     .toString(),
-                registeredSales: quarterlyRegisteredSales.toStringAsFixed(0),
-                remainingSales: quarterlyRemaining.toStringAsFixed(0),
+                registeredSales:
+                    'LKR ${quarterlyRegisteredSales.toStringAsFixed(2)}',
+                remainingSales: 'LKR ${quarterlyRemaining.toStringAsFixed(2)}',
               ),
               const SizedBox(width: 16),
               _buildSalesAnalyzeCard(
                 title: "Annual Sales Analyze",
-                salesTarget: annualTarget.toStringAsFixed(0),
+                salesTarget: 'LKR ${annualTarget.toStringAsFixed(2)}',
                 registeredClients: latestDeals
                     .where((deal) {
                       final dealDate = DateTime.parse(deal['created_at']);
@@ -228,8 +230,9 @@ class _SalesTaskScreenState extends State<SalesTaskScreen> {
                     })
                     .length
                     .toString(),
-                registeredSales: annualRegisteredSales.toStringAsFixed(0),
-                remainingSales: annualRemaining.toStringAsFixed(0),
+                registeredSales:
+                    'LKR ${annualRegisteredSales.toStringAsFixed(2)}',
+                remainingSales: 'LKR ${annualRemaining.toStringAsFixed(2)}',
               ),
             ],
           ),
@@ -477,7 +480,7 @@ class _SalesTaskScreenState extends State<SalesTaskScreen> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  "\$${(deal['deal_amount'] ?? 0).toStringAsFixed(0)}",
+                  "LKR ${(deal['deal_amount'] ?? 0).toStringAsFixed(2)}",
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,

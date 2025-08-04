@@ -352,7 +352,7 @@ class _AdminAddNewTargetState extends State<AdminAddNewTarget> {
               ],
               decoration: InputDecoration(
                 hintText: "Amount",
-                prefixText: "\LKR ",
+                prefixText: "LKR ",
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
