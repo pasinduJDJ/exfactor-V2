@@ -93,8 +93,6 @@ class _MemberSalesTrackState extends State<MemberSalesTrack> {
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 70,
-        backgroundColor: Colors.white,
-        elevation: 1,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
           onPressed: () => Navigator.of(context).pop(),

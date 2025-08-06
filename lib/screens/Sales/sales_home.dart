@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:exfactor/utils/colors.dart';
 import 'package:exfactor/widgets/common/custom_button.dart';
 import 'package:exfactor/services/saleService.dart';
+import 'package:exfactor/utils/constants.dart';
 
 class SalesHomeScreen extends StatefulWidget {
   const SalesHomeScreen({super.key});
@@ -165,8 +166,8 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
               _buildSalesCard(
                 title: "Annual Sales",
                 percentage: _calculateProgress(annualAchieved, annualTarget),
-                dealValue: 'LKR ${annualAchieved.toStringAsFixed(2)}',
-                targetValue: 'LKR ${annualTarget.toStringAsFixed(2)}',
+                dealValue: formatCurrency(annualAchieved),
+                targetValue: formatCurrency(annualTarget),
                 color: cardDarkRed,
                 cardWidth: 200,
               ),
@@ -175,8 +176,8 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
                 title: "Quarterly Sales",
                 percentage:
                     _calculateProgress(quarterlyAchieved, quarterlyTarget),
-                dealValue: 'LKR ${quarterlyAchieved.toStringAsFixed(2)}',
-                targetValue: 'LKR ${quarterlyTarget.toStringAsFixed(2)}',
+                dealValue: formatCurrency(quarterlyAchieved),
+                targetValue: formatCurrency(quarterlyTarget),
                 color: cardYellow,
                 cardWidth: 200,
               ),
@@ -184,8 +185,8 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
               _buildSalesCard(
                 title: "Monthly Sales",
                 percentage: _calculateProgress(monthlyAchieved, monthlyTarget),
-                dealValue: 'LKR ${monthlyAchieved.toStringAsFixed(2)}',
-                targetValue: 'LKR ${monthlyTarget.toStringAsFixed(2)}',
+                dealValue: formatCurrency(monthlyAchieved),
+                targetValue: formatCurrency(monthlyTarget),
                 color: cardDarkGreen,
                 cardWidth: 200,
               ),
@@ -411,14 +412,14 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
           const SizedBox(height: 16),
 
           // Sales metrics
-          _buildSalesMetric("Sales Target:",
-              'LKR ${monthlyTarget.toStringAsFixed(2)}', false),
+          _buildSalesMetric(
+              "Sales Target:", formatCurrency(monthlyTarget), false),
           const SizedBox(height: 8),
-          _buildSalesMetric("Registered Sales:",
-              'LKR ${monthlyAchieved.toStringAsFixed(2)}', false),
+          _buildSalesMetric(
+              "Registered Sales:", formatCurrency(monthlyAchieved), false),
           const SizedBox(height: 8),
-          _buildSalesMetric("Remaining Sales:",
-              'LKR ${remainingSales.toStringAsFixed(2)}', true),
+          _buildSalesMetric(
+              "Remaining Sales:", formatCurrency(remainingSales), true),
         ],
       ),
     );

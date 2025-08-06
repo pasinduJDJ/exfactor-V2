@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 
 class AppConstants {
   // App Info
@@ -55,4 +56,16 @@ class AppStrings {
   static const String invalidEmail = 'Please enter a valid email';
   static const String invalidPassword =
       'Password must be at least 6 characters';
+}
+
+String formatWithCommas(num value, {int decimals = 0}) {
+  final formatter =
+      NumberFormat(decimals > 0 ? '#,##0.${'0' * decimals}' : '#,##0');
+  return formatter.format(value);
+}
+
+String formatCurrency(num value, {int decimals = 2}) {
+  final formatter = NumberFormat.currency(
+      locale: 'en_US', symbol: 'LKR ', decimalDigits: decimals);
+  return formatter.format(value);
 }

@@ -4,6 +4,7 @@ import 'package:exfactor/utils/colors.dart';
 import 'package:exfactor/widgets/common/custom_button.dart';
 import 'package:exfactor/services/saleService.dart';
 import 'package:exfactor/services/superbase_service.dart';
+import 'package:exfactor/utils/constants.dart';
 
 class AdminUpdateTarget extends StatefulWidget {
   const AdminUpdateTarget({super.key});
@@ -65,7 +66,7 @@ class _AdminUpdateTargetState extends State<AdminUpdateTarget> {
           // Populate revenue controller with selected target
           if (selectedTarget != null) {
             _revenueController.text =
-                (selectedTarget!['amount'] ?? 0).toString();
+                formatWithCommas(selectedTarget!['amount'] ?? 0);
           }
         }
 
@@ -309,7 +310,7 @@ class _AdminUpdateTargetState extends State<AdminUpdateTarget> {
                             return DropdownMenuItem<Map<String, dynamic>>(
                               value: target,
                               child: Text(
-                                  'Year $year - LKR ${(target['amount'] ?? 0).toStringAsFixed(2)}'),
+                                  'Year $year - LKR ${formatWithCommas(target['amount'] ?? 0)}'),
                             );
                           }).toList(),
                           onChanged: (Map<String, dynamic>? newValue) {
@@ -317,7 +318,7 @@ class _AdminUpdateTargetState extends State<AdminUpdateTarget> {
                               selectedTarget = newValue;
                               if (newValue != null) {
                                 _revenueController.text =
-                                    (newValue['amount'] ?? 0).toString();
+                                    formatWithCommas(newValue['amount'] ?? 0);
                               }
                             });
                           },

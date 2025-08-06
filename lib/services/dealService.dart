@@ -476,4 +476,24 @@ class DealService {
       'closed': 'Closed',
     };
   }
+
+  // Get total closed deals count (for admin dashboard)
+  static Future<int> getTotalClosedDealsCount() async {
+    try {
+      final allDeals = await SupabaseService.getAllDeals();
+
+      int closedDealsCount = 0;
+      for (final deal in allDeals) {
+        final status = (deal['deal_status'] ?? '').toString().toLowerCase();
+        if (status == 'closed' || status == 'won' || status == 'completed') {
+          closedDealsCount++;
+        }
+      }
+
+      return closedDealsCount;
+    } catch (e) {
+      print('Error getting total closed deals count: $e');
+      return 0;
+    }
+  }
 }

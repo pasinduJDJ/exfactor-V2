@@ -1,0 +1,87 @@
+import 'package:exfactor/services/superbase_service.dart';
+
+class ProjectService {
+  // Get total live projects count (for admin dashboard)
+  static Future<int> getTotalLiveProjectsCount() async {
+    try {
+      final allProjects = await SupabaseService.getAllProjects();
+
+      int liveProjectsCount = 0;
+      print('Total projects found: ${allProjects.length}');
+      for (final project in allProjects) {
+        final status = (project['status'] ?? '').toString().toLowerCase();
+        print('Project: ${project['title']} - Status: $status');
+        if (status == 'on progress' ||
+            status == 'progress' ||
+            status == 'in progress') {
+          liveProjectsCount++;
+          print('✅ Counted as live project: ${project['title']}');
+        }
+      }
+      print('Total live projects count: $liveProjectsCount');
+
+      return liveProjectsCount;
+    } catch (e) {
+      print('Error getting total live projects count: $e');
+      return 0;
+    }
+  }
+
+  // Get projects by status
+  static Future<List<Map<String, dynamic>>> getProjectsByStatus(
+      String status) async {
+    try {
+      final allProjects = await SupabaseService.getAllProjects();
+
+      return allProjects.where((project) {
+        final projectStatus =
+            (project['status'] ?? '').toString().toLowerCase();
+        return projectStatus == status.toLowerCase();
+      }).toList();
+    } catch (e) {
+      print('Error getting projects by status: $e');
+      return [];
+    }
+  }
+
+  // Get project statistics
+  static Future<Map<String, int>> getProjectStatistics() async {
+    try {
+      final allProjects = await SupabaseService.getAllProjects();
+
+      int totalProjects = allProjects.length;
+      int liveProjects = 0;
+      int completedProjects = 0;
+      int pendingProjects = 0;
+
+      for (final project in allProjects) {
+        final status = (project['status'] ?? '').toString().toLowerCase();
+
+        if (status == 'on progress' ||
+            status == 'progress' ||
+            status == 'in progress') {
+          liveProjects++;
+        } else if (status == 'completed' || status == 'done') {
+          completedProjects++;
+        } else if (status == 'pending') {
+          pendingProjects++;
+        }
+      }
+
+      return {
+        'total': totalProjects,
+        'live': liveProjects,
+        'completed': completedProjects,
+        'pending': pendingProjects,
+      };
+    } catch (e) {
+      print('Error getting project statistics: $e');
+      return {
+        'total': 0,
+        'live': 0,
+        'completed': 0,
+        'pending': 0,
+      };
+    }
+  }
+}
