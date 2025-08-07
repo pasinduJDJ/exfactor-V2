@@ -170,18 +170,18 @@ class BaseLayout extends StatelessWidget {
               children: [
                 const SizedBox(height: 20),
 
-                // Profile Option
-                ListTile(
-                  leading:
-                      const Icon(Icons.person_outline, color: primaryColor),
-                  title: const Text('Profile'),
-                  onTap: () {
-                    Navigator.pop(context); // Close drawer
-                    onProfileTap?.call();
-                  },
-                ),
+                // // Profile Option
+                // ListTile(
+                //   leading:
+                //       const Icon(Icons.person_outline, color: primaryColor),
+                //   title: const Text('Profile'),
+                //   onTap: () {
+                //     Navigator.pop(context); // Close drawer
+                //     onProfileTap?.call();
+                //   },
+                // ),
 
-                const Divider(),
+                // const Divider(),
 
                 // Settings Option
                 ListTile(

@@ -4,18 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class UserUtils {
-  // Summary card
   static Widget buildStatusSummaryCard(List<Map<String, dynamic>> items,
       {void Function(int index)? onTap, Color? color}) {
     return Card(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
       ),
       elevation: 8,
       color: color ??
           primaryColor, // Use provided color or default to primaryColor
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20),
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: items.asMap().entries.map((entry) {
@@ -45,7 +44,7 @@ class UserUtils {
                       child: Text(
                         item['count'].toString().padLeft(2, '0'),
                         style: const TextStyle(
-                          fontSize: 20,
+                          fontSize: 25,
                           fontWeight: FontWeight.bold,
                           color: primaryColor,
                         ),
@@ -86,7 +85,15 @@ class UserUtils {
           child: Container(
             width: double.infinity,
             decoration: BoxDecoration(
-              color: color,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.5),
+                  spreadRadius: 5,
+                  blurRadius: 7,
+                  offset: const Offset(3, 3),
+                )
+              ],
+              color: kWhite,
               borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(12), bottom: Radius.circular(12)),
             ),
@@ -94,18 +101,37 @@ class UserUtils {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16),
+                Column(
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.circle,
+                          color: color,
+                        ),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        Text(
+                          title,
+                          style: TextStyle(
+                              color: color,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16),
+                        ),
+                      ],
+                    )
+                  ],
                 ),
-                Icon(
-                  expanded
-                      ? Icons.keyboard_arrow_up
-                      : Icons.keyboard_arrow_down,
-                  color: Colors.white,
+                Column(
+                  children: [
+                    Icon(
+                      expanded
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
+                      color: color,
+                    ),
+                  ],
                 ),
               ],
             ),

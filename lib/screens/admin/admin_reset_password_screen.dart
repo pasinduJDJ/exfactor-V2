@@ -1,3 +1,4 @@
+import 'package:exfactor/utils/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:exfactor/services/superbase_service.dart';
 
@@ -88,7 +89,19 @@ class _AdminResetPasswordScreenState extends State<AdminResetPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Reset Password')),
+      backgroundColor: backgroundColor,
+      appBar: AppBar(
+        title: const Text(
+          'Reset Password',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+        toolbarHeight: 70,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        centerTitle: true,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -112,7 +125,7 @@ class _AdminResetPasswordScreenState extends State<AdminResetPasswordScreen> {
                 validator: (v) =>
                     v == null || v.isEmpty ? 'Enter current password' : null,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
               const Text('New Password'),
               TextFormField(
                 controller: _newPasswordController,
@@ -127,7 +140,7 @@ class _AdminResetPasswordScreenState extends State<AdminResetPasswordScreen> {
                 validator: (v) =>
                     v == null || v.isEmpty ? 'Enter new password' : null,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 15),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

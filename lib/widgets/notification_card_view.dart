@@ -54,14 +54,10 @@ class NotificationCard {
                   Container(
                     width: 36,
                     height: 36,
-                    decoration: BoxDecoration(
-                      color: _colorForType(type),
-                      shape: BoxShape.circle,
-                    ),
                     child: Icon(
                       _iconForType(type),
-                      color: Colors.white,
-                      size: 20,
+                      color: primaryColor,
+                      size: 30,
                     ),
                   ),
 
@@ -99,11 +95,12 @@ class NotificationCard {
                   // 3) Edit and Delete buttons
                   if (onEdit != null)
                     IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.blue),
+                      icon:
+                          const Icon(Icons.edit_document, color: primaryColor),
                       onPressed: () => onEdit(item),
                     ),
                   IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
+                    icon: const Icon(Icons.delete, color: primaryColor),
                     onPressed: () => onDelete(item['notification_id']),
                   ),
                 ],

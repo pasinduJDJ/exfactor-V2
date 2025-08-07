@@ -46,11 +46,15 @@ class _AdminAddTaskScreenState extends State<AdminAddTaskScreen> {
   // Load technical members from database
   Future<void> _loadTechnicalMembers() async {
     try {
+      print('Loading technical members...');
       final members = await SupabaseService.getTechnicalMembers();
+      print('Technical members loaded: ${members.length}');
+      print('Technical members data: $members');
       setState(() {
         _technicalMembers = members;
       });
     } catch (e) {
+      print('Error loading technical members: $e');
       _showToast('Error loading technical members: ${e.toString()}');
     }
   }
@@ -140,14 +144,18 @@ class _AdminAddTaskScreenState extends State<AdminAddTaskScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: KbgColor,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         title: const Text('Add New Tasks',
             style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: kPrimaryColor,
-        foregroundColor: kWhite,
+        toolbarHeight: 70,
+        backgroundColor: Colors.white,
         elevation: 1,
-        iconTheme: const IconThemeData(color: kWhite),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -156,34 +164,33 @@ class _AdminAddTaskScreenState extends State<AdminAddTaskScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
               _buildTextField(_taskTitleController, 'Enter Task Title'),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               _buildProjectDropdown(
                   'Select Project',
                   _projects,
                   _selectedProject,
                   (val) => setState(() => _selectedProject = val)),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               _buildDateField('Task Commencement Date', _commencementDate,
                   () => _pickDate(context, true)),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               _buildDateField('Task Expected Delivery Date', _deliveryDate,
                   () => _pickDate(context, false)),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               _buildMemberDropdown(
                   'Select Member',
                   _technicalMembers,
                   _selectedMember,
                   (val) => setState(() => _selectedMember = val)),
-              const SizedBox(height: 24),
+              const SizedBox(height: 12),
               CustomButton(
-                text: 'Submit New Task',
+                text: 'Submit',
                 backgroundColor: kPrimaryColor,
                 onPressed: _handleSubmit,
                 isLoading: _isLoading,
               ),
-              const SizedBox(height: 20),
             ],
           ),
         ),

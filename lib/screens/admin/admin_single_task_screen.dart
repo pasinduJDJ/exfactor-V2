@@ -142,20 +142,16 @@ class _AdminSingleTaskScreenState extends State<AdminSingleTaskScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: KbgColor,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         title: const Text('Mange Task',
             style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: kPrimaryColor,
-        foregroundColor: kWhite,
-        elevation: 1,
-        iconTheme: const IconThemeData(color: kWhite),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.list),
-            onPressed: () {},
-          ),
-        ],
+        toolbarHeight: 70,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         child: isLoading
@@ -163,7 +159,8 @@ class _AdminSingleTaskScreenState extends State<AdminSingleTaskScreen> {
             : task == null
                 ? const Center(child: Text('Task not found'))
                 : Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 15, vertical: 10),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -176,7 +173,7 @@ class _AdminSingleTaskScreenState extends State<AdminSingleTaskScreen> {
                             children: [
                               Container(
                                 decoration: const BoxDecoration(
-                                  color: kPrimaryColor,
+                                  color: primaryColor,
                                   borderRadius: BorderRadius.only(
                                     topLeft: Radius.circular(16),
                                     topRight: Radius.circular(16),
@@ -220,39 +217,80 @@ class _AdminSingleTaskScreenState extends State<AdminSingleTaskScreen> {
                             ],
                           ),
                         ),
-                        Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            child: CustomButton(
-                              text: "Remove",
-                              onPressed: () {
-                                // int? taskId = task?['task_id'];
-                                // if (taskId is! int &&
-                                //     task?['task_id'] != null) {
-                                //   taskId =
-                                //       int.tryParse(task?['task_id'].toString());
-                                // }
-                                // _confirmAndRemoveTask(context, taskId);
-                              },
-                              backgroundColor: cardDarkRed,
-                            )),
-                        Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 0),
-                            child: CustomButton(
-                              text: "Update Task",
-                              onPressed: () async {
-                                String updateTaskId =
-                                    (task?['task_id'] ?? '').toString();
-                                await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => AdminUpdateTaskScreen(
-                                        taskId: updateTaskId),
+                        const SizedBox(height: 10),
+                        // Task Actions Card
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              ListTile(
+                                leading:
+                                    const Icon(Icons.edit, color: primaryColor),
+                                title: const Text(
+                                  "Update Task",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
                                   ),
-                                );
-                                fetchTask();
-                              },
-                              backgroundColor: cardGreen,
-                            )),
+                                ),
+                                trailing: const Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 13,
+                                  color: primaryColor,
+                                ),
+                                onTap: () async {
+                                  String updateTaskId =
+                                      (task?['task_id'] ?? '').toString();
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          AdminUpdateTaskScreen(
+                                              taskId: updateTaskId),
+                                    ),
+                                  );
+                                  fetchTask();
+                                },
+                              ),
+                              const Divider(thickness: 1),
+                              ListTile(
+                                leading: const Icon(Icons.delete,
+                                    color: primaryColor),
+                                title: const Text(
+                                  "Remove Task",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                                trailing: const Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 13,
+                                  color: primaryColor,
+                                ),
+                                onTap: () {
+                                  _confirmAndRemoveTask(
+                                      context, task?['task_id']);
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
                       ],
                     ),
                   ),

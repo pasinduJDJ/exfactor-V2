@@ -32,7 +32,7 @@ class _MangeUsersState extends State<MangeUsers> {
       // Filter users to show only Supervisors and Technicians
       final filteredUsers = fetchedUsers.where((user) {
         final role = user['role']?.toString().toLowerCase() ?? '';
-        return role == 'supervisor' || role == 'technician' || role == 'sales';
+        return role == 'supervisor' || role == 'technical' || role == 'sales';
       }).toList();
 
       setState(() {
@@ -55,10 +55,10 @@ class _MangeUsersState extends State<MangeUsers> {
           child: Column(
             children: [
               const SizedBox(
-                height: 30,
+                height: 15,
               ),
               CustomButton(
-                text: "Add New Team Members",
+                text: "Add New Members",
                 width: double.infinity,
                 backgroundColor: kPrimaryColor,
                 onPressed: () async {
@@ -68,19 +68,20 @@ class _MangeUsersState extends State<MangeUsers> {
                   );
 
                   if (result == 'user_added') {
-                    fetchUsers(); // Only run after a user is added
+                    fetchUsers();
                   } else if (result == 'user_removed') {
-                    fetchUsers(); // Refresh after a user is removed
+                    fetchUsers();
                   }
                 },
               ),
               const SizedBox(
-                height: 20,
+                height: 12,
               ),
               CustomButton(
                 text: "Profile",
                 width: double.infinity,
-                backgroundColor: cardDarkGreen,
+                backgroundColor: kWhite,
+                textColor: primaryColor,
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -89,20 +90,10 @@ class _MangeUsersState extends State<MangeUsers> {
                     ),
                   );
                 },
+                icon: Icon(Icons.person),
               ),
               const SizedBox(
-                height: 20,
-              ),
-              const Row(
-                children: [
-                  Text(
-                    "Team Members ",
-                    style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1),
-                  ),
-                ],
+                height: 15,
               ),
               isLoading
                   ? const CircularProgressIndicator()

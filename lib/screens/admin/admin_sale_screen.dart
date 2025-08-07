@@ -69,8 +69,6 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 15),
         child: Column(
           children: [
-            const SizedBox(height: 30),
-
             // Section 1: Monthly Sales Card
             _buildMonthlySalesCard(),
 
@@ -343,7 +341,7 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
           height: 48,
           icon: const Icon(Icons.track_changes),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         CustomButton(
           text: "Update Target",
           onPressed: () async {

@@ -77,33 +77,15 @@ class _AdminNotificationScreenBodyState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
-      // appBar: AppBar(
-      //   title: const Text(
-      //     "NOTIFICATIONS",
-      //     style: TextStyle(
-      //       letterSpacing: 2,
-      //       color: primaryColor,
-      //       fontWeight: FontWeight.bold,
-      //     ),
-      //   ),
-      //   centerTitle: true,
-      //   toolbarHeight: 80,
-      //   shape: const RoundedRectangleBorder(
-      //     borderRadius: BorderRadius.only(
-      //       bottomLeft: Radius.circular(18),
-      //       bottomRight: Radius.circular(18),
-      //     ),
-      //   ),
-      // ),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: 15),
         child: Column(
           children: [
             const SizedBox(
-              height: 30,
+              height: 15,
             ),
             CustomButton(
-              text: "Add Alert",
+              text: "Add Event ",
               width: double.infinity,
               backgroundColor: kPrimaryColor,
               onPressed: () async {
@@ -124,24 +106,7 @@ class _AdminNotificationScreenBodyState
             const Row(
               children: [
                 Text(
-                  "Notification ",
-                  style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1),
-                )
-              ],
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            const Row(
-              children: [
-                Text(
-                  "Today Notification ",
+                  "Today Events ",
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -190,7 +155,7 @@ class _AdminNotificationScreenBodyState
             const Row(
               children: [
                 Text(
-                  "Up coming Notification ",
+                  "Up coming Events ",
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,

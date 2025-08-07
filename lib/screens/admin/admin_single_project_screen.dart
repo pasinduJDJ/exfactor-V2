@@ -99,24 +99,23 @@ class _AdminSingleProjectScreenState extends State<AdminSingleProjectScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: KbgColor,
+        backgroundColor: backgroundColor,
         appBar: AppBar(
           title: Text(
             isLoading
                 ? "Loading..."
                 : (project == null
                     ? "Project Not Found"
-                    : "${project!['title']} Project Details"),
+                    : "${project!['title']} "),
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
           ),
+          toolbarHeight: 70,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          centerTitle: true,
         ),
-        // appBar: CustomAppBarWithIcon(
-        //   icon: Icons.task,
-        //   title: isLoading
-        //       ? "Loading..."
-        //       : (project == null
-        //           ? "Project Not Found"
-        //           : "${project!['title']} Project Details"),
-        // ),
         body: ListView(
           children: [
             isLoading
@@ -209,19 +208,21 @@ class _AdminSingleProjectScreenState extends State<AdminSingleProjectScreen> {
                               ),
                             ),
                             const SizedBox(
-                              height: 16,
+                              height: 15,
                             ),
                             CustomButton(
                               text: "In Archive Project",
+                              icon: Icon(Icons.remove_red_eye),
                               onPressed: () => _archiveProject(context),
-                              backgroundColor: cardDarkRed,
+                              backgroundColor: primaryColor,
                             ),
                             const SizedBox(
-                              height: 16,
+                              height: 10,
                             ),
                             CustomButton(
                               text: "Update Project",
-                              backgroundColor: cardGreen,
+                              backgroundColor: primaryColor,
+                              icon: Icon(Icons.edit_document),
                               onPressed: () async {
                                 await Navigator.push(
                                   context,
@@ -234,7 +235,7 @@ class _AdminSingleProjectScreenState extends State<AdminSingleProjectScreen> {
                                 fetchProject();
                               },
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 15),
                             UserUtils.buildExpandableGroup(
                               title: "${project!['title']} ",
                               color: kPrimaryColor,

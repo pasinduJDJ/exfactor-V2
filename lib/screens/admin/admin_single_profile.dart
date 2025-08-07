@@ -50,20 +50,21 @@ class _AdminSingleProfileScreenState extends State<AdminSingleProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: KbgColor,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-          title: Text(
-        user != null
-            ? "${user!['first_name'] ?? ''} ${user!['last_name'] ?? ''}"
-            : "User Profile",
-      )),
-
-      // appBar: CustomAppBarWithIcon(
-      //   icon: Icons.person,
-      //   title: user != null
-      //       ? "${user!['first_name'] ?? ''} ${user!['last_name'] ?? ''}"
-      //       : "User Profile",
-      // ),
+        title: Text(
+          user != null
+              ? "${user!['first_name'] ?? ''} ${user!['last_name'] ?? ''}"
+              : "User Profile",
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+        toolbarHeight: 70,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        centerTitle: true,
+      ),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: 15, vertical: 20),
         child: isLoading
@@ -118,7 +119,7 @@ class _AdminSingleProfileScreenState extends State<AdminSingleProfileScreen> {
                         ),
                       ),
                       const SizedBox(
-                        height: 16,
+                        height: 10,
                       ),
                       const Row(
                         mainAxisAlignment: MainAxisAlignment.start,
@@ -162,7 +163,7 @@ class _AdminSingleProfileScreenState extends State<AdminSingleProfileScreen> {
                         ),
                       ),
                       const SizedBox(
-                        height: 16,
+                        height: 10,
                       ),
                       const Row(
                         mainAxisAlignment: MainAxisAlignment.start,
@@ -203,7 +204,7 @@ class _AdminSingleProfileScreenState extends State<AdminSingleProfileScreen> {
                         ),
                       ),
                       const SizedBox(
-                        height: 16,
+                        height: 10,
                       ),
                       CustomButton(
                         text: "Remove Member",
@@ -273,8 +274,7 @@ class _AdminSingleProfileScreenState extends State<AdminSingleProfileScreen> {
                             }
                           }
                         },
-                        backgroundColor: cardDarkRed,
-                        width: double.infinity / 2,
+                        backgroundColor: primaryColor,
                       ),
                       const SizedBox(
                         height: 16,

@@ -302,14 +302,18 @@ class _AdminAddProjectScreenState extends State<AdminAddProjectScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: KbgColor,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Manage Projects',
+        toolbarHeight: 70,
+        centerTitle: true,
+        title: const Text('Add New Projects',
             style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: kPrimaryColor,
-        foregroundColor: kWhite,
+        backgroundColor: Colors.white,
         elevation: 1,
-        iconTheme: const IconThemeData(color: kWhite),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -318,17 +322,17 @@ class _AdminAddProjectScreenState extends State<AdminAddProjectScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
               _buildTextField(_titleController, 'Enter Project Title'),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               _buildTextField(_descController, 'Enter Project Description'),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               _buildTextField(
                   _clientController, 'Enter Client Name or Company'),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               _buildTextField(
                   _contactPersonController, 'Enter Primary Contact Person'),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               _buildTextField(_emailController, 'Enter Contact Email',
                   keyboardType: TextInputType.emailAddress, validator: (val) {
                 if (val == null || val.isEmpty) return 'Required';
@@ -337,7 +341,7 @@ class _AdminAddProjectScreenState extends State<AdminAddProjectScreen> {
                   return 'Enter a valid email address';
                 return null;
               }),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               _buildTextField(_mobileController, 'Enter Contact  Mobile number',
                   keyboardType: TextInputType.phone, validator: (val) {
                 if (val == null || val.isEmpty) return 'Required';
@@ -346,7 +350,7 @@ class _AdminAddProjectScreenState extends State<AdminAddProjectScreen> {
                   return 'Enter a valid mobile number';
                 return null;
               }),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               const Text('Select Country'),
               DropdownButtonFormField<String>(
                 value: _selectedCountry,
@@ -400,23 +404,23 @@ class _AdminAddProjectScreenState extends State<AdminAddProjectScreen> {
                     style: TextStyle(color: Colors.orange, fontSize: 12),
                   ),
                 ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               _buildDateField('Select Commencement Date', _commencementDate,
                   (pickedDate) {
                 setState(() {
                   _commencementDate = pickedDate;
                 });
               }),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               _buildDateField('Select Expected Delivery Date', _deliveryDate,
                   (pickedDate) {
                 setState(() {
                   _deliveryDate = pickedDate;
                 });
               }),
-              const SizedBox(height: 24),
+              const SizedBox(height: 12),
               CustomButton(
-                text: 'Create Project',
+                text: 'Submit',
                 backgroundColor: kPrimaryColor,
                 onPressed: _handleSubmit,
                 isLoading: _isLoading,

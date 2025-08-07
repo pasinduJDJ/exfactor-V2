@@ -108,31 +108,32 @@ class _AdminNotificationEditScreenState
     return Scaffold(
       backgroundColor: KbgColor,
       appBar: AppBar(
-        title: const Text('Edit Notice',
+        title: const Text('Update Event',
             style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: kPrimaryColor,
-        foregroundColor: kWhite,
-        elevation: 1,
-        iconTheme: const IconThemeData(color: kWhite),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_active),
-            onPressed: () {},
-          ),
-        ],
+        toolbarHeight: 70,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 15),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 16),
+              SizedBox(
+                height: 15,
+              ),
+              Text("Title"),
+              SizedBox(
+                height: 5,
+              ),
               TextFormField(
                 controller: _titleController,
                 decoration: InputDecoration(
-                  hintText: 'Enter title',
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
@@ -144,10 +145,13 @@ class _AdminNotificationEditScreenState
                 validator: (val) =>
                     val == null || val.isEmpty ? 'Required' : null,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
+              Text("Notice Type"),
+              SizedBox(
+                height: 5,
+              ),
               DropdownButtonFormField<String>(
                 value: _selectedType,
-                hint: const Text('Select Notice Type'),
                 items: _noticeTypes
                     .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                     .toList(),
@@ -164,12 +168,15 @@ class _AdminNotificationEditScreenState
                 validator: (val) =>
                     val == null || val.isEmpty ? 'Required' : null,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
+              Text("Message"),
+              SizedBox(
+                height: 5,
+              ),
               TextFormField(
                 controller: _messageController,
                 maxLines: 4,
                 decoration: InputDecoration(
-                  hintText: 'Enter Message',
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
@@ -181,13 +188,16 @@ class _AdminNotificationEditScreenState
                 validator: (val) =>
                     val == null || val.isEmpty ? 'Required' : null,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
+              Text("Schedule Date"),
+              SizedBox(
+                height: 5,
+              ),
               GestureDetector(
                 onTap: () => _pickDate(context),
                 child: AbsorbPointer(
                   child: TextFormField(
                     decoration: InputDecoration(
-                      hintText: 'Schedule Date',
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
@@ -206,7 +216,7 @@ class _AdminNotificationEditScreenState
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 15),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimaryColor,
@@ -218,7 +228,7 @@ class _AdminNotificationEditScreenState
                 onPressed: _handleSubmit,
                 child: _isLoading
                     ? const CircularProgressIndicator()
-                    : const Text('Update Notice'),
+                    : const Text('Submit'),
               ),
             ],
           ),

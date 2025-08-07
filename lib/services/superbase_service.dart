@@ -187,12 +187,19 @@ class SupabaseService {
   // Technical  ////////////////////////////////////////////////////////////////////////////////////////////////////
   // GET TECHNICAL MEMBERS (users with technician role)
   static Future<List<Map<String, dynamic>>> getTechnicalMembers() async {
-    final response = await _client
-        .from('user')
-        .select('member_id, first_name, last_name')
-        .eq('role', 'Technician');
-
-    return List<Map<String, dynamic>>.from(response);
+    try {
+      print(
+          'Querying for technical members with role: technical or Technician');
+      final response = await _client
+          .from('user')
+          .select('member_id, first_name, last_name')
+          .or('role.eq.Technical');
+      print('Technical members query response: $response');
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Error in getTechnicalMembers: $e');
+      rethrow;
+    }
   }
 
   // Users Management ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -186,27 +186,29 @@ class _AdminUpdateTaskScreenState extends State<AdminUpdateTaskScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: KbgColor,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         title: const Text('Update Task',
             style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: kPrimaryColor,
-        foregroundColor: kWhite,
-        elevation: 1,
-        iconTheme: const IconThemeData(color: kWhite),
+        toolbarHeight: 70,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        centerTitle: true,
       ),
       body: _task == null
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 15),
               child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 15),
                     _buildTextField(_titleController, 'Enter Task Title'),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     _buildDateField('Select Start Date', _startDate,
                         (pickedDate) {
                       setState(() {
@@ -215,14 +217,14 @@ class _AdminUpdateTaskScreenState extends State<AdminUpdateTaskScreen> {
                             _startDate!.toIso8601String();
                       });
                     }),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     _buildDateField('Select End Date', _endDate, (pickedDate) {
                       setState(() {
                         _endDate = pickedDate;
                         _endDateController.text = _endDate!.toIso8601String();
                       });
                     }),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     const Text('Select Members'),
                     GestureDetector(
                       onTap: () async {
@@ -317,7 +319,7 @@ class _AdminUpdateTaskScreenState extends State<AdminUpdateTaskScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     const Text('Select Project'),
                     DropdownButtonFormField<int>(
                       value: _selectedProjectId,
@@ -343,7 +345,7 @@ class _AdminUpdateTaskScreenState extends State<AdminUpdateTaskScreen> {
                       ),
                       validator: (val) => val == null ? 'Required' : null,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     const Text('Supervisor'),
                     DropdownButtonFormField<int>(
                       value: _selectedSupervisorId,
@@ -388,14 +390,13 @@ class _AdminUpdateTaskScreenState extends State<AdminUpdateTaskScreen> {
                       ),
                       disabledHint: Text(_selectedStatus ?? ''),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 15),
                     CustomButton(
                       text: 'Update Task',
                       backgroundColor: kPrimaryColor,
                       onPressed: _handleSubmit,
                       isLoading: _isLoading,
                     ),
-                    const SizedBox(height: 20),
                   ],
                 ),
               ),

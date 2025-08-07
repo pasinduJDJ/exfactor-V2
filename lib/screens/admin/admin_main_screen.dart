@@ -66,9 +66,9 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
       label: 'Events',
     ),
     BottomNavigationBarItem(
-      icon: Icon(Icons.person_outline),
-      activeIcon: Icon(Icons.person),
-      label: 'Profile',
+      icon: Icon(Icons.group_add_outlined),
+      activeIcon: Icon(Icons.group_add),
+      label: 'Team',
     ),
   ];
 

@@ -89,33 +89,32 @@ class _AdminAddNotificationScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: KbgColor,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Add New Notice',
+        title: const Text('Add New Event',
             style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: kPrimaryColor,
-        foregroundColor: kWhite,
-        elevation: 1,
-        iconTheme: const IconThemeData(color: kWhite),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_active),
-            onPressed: () {},
-          ),
-        ],
+        toolbarHeight: 70,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.symmetric(horizontal: 15),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 16),
+              const SizedBox(height: 15),
+              Text("Title"),
+              SizedBox(
+                height: 5,
+              ),
               TextFormField(
                 controller: _titleController,
                 decoration: InputDecoration(
-                  hintText: 'Enter title',
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
@@ -127,10 +126,13 @@ class _AdminAddNotificationScreenState
                 validator: (val) =>
                     val == null || val.isEmpty ? 'Required' : null,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
+              Text("Type Of Notice"),
+              SizedBox(
+                height: 5,
+              ),
               DropdownButtonFormField<String>(
                 value: _selectedType,
-                hint: const Text('Select Notice Type'),
                 items: _noticeTypes
                     .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                     .toList(),
@@ -147,12 +149,15 @@ class _AdminAddNotificationScreenState
                 validator: (val) =>
                     val == null || val.isEmpty ? 'Required' : null,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
+              Text("Message"),
+              SizedBox(
+                height: 5,
+              ),
               TextFormField(
                 controller: _messageController,
                 maxLines: 4,
                 decoration: InputDecoration(
-                  hintText: 'Enter Message',
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
@@ -165,12 +170,15 @@ class _AdminAddNotificationScreenState
                     val == null || val.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 12),
+              Text("Schedule Date"),
+              SizedBox(
+                height: 5,
+              ),
               GestureDetector(
                 onTap: () => _pickDate(context),
                 child: AbsorbPointer(
                   child: TextFormField(
                     decoration: InputDecoration(
-                      hintText: 'Schedule Date',
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
@@ -189,7 +197,7 @@ class _AdminAddNotificationScreenState
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 15),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimaryColor,
@@ -201,7 +209,7 @@ class _AdminAddNotificationScreenState
                 onPressed: _handleSubmit,
                 child: _isLoading
                     ? const CircularProgressIndicator()
-                    : const Text('Publish Notice'),
+                    : const Text('Submit'),
               ),
             ],
           ),

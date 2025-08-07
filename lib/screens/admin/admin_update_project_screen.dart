@@ -354,10 +354,12 @@ class _AdminUpdateProjectScreenState extends State<AdminUpdateProjectScreen> {
       appBar: AppBar(
         title: const Text('Update Project',
             style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: kPrimaryColor,
-        foregroundColor: kWhite,
-        elevation: 1,
-        iconTheme: const IconThemeData(color: kWhite),
+        toolbarHeight: 70,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        centerTitle: true,
       ),
       body: _project == null
           ? const Center(child: CircularProgressIndicator())
@@ -497,14 +499,13 @@ class _AdminUpdateProjectScreenState extends State<AdminUpdateProjectScreen> {
                       validator: (val) =>
                           val == null || val.isEmpty ? 'Required' : null,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 15),
                     CustomButton(
                       text: 'Update Project',
                       backgroundColor: kPrimaryColor,
                       onPressed: _handleSubmit,
                       isLoading: _isLoading,
                     ),
-                    const SizedBox(height: 20),
                   ],
                 ),
               ),

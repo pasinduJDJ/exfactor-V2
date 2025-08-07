@@ -209,63 +209,44 @@ class _AdminHomeState extends State<AdminHome> {
                   ],
                 ),
 
-                // Content based on target availability
-                if (hasTarget && revenueData != null) ...[
-                  // Progress Bar and Value - Bottom
-                  Column(
-                    children: [
-                      // Progress Bar
-                      Container(
-                        width: double.infinity,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: FractionallySizedBox(
-                          alignment: Alignment.centerLeft,
-                          widthFactor:
-                              (revenueData!['progressPercentage'] as double)
-                                  .clamp(0.0, 1.0),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: cardGreen,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
+                Column(
+                  children: [
+                    // Progress Bar
+                    Container(
+                      width: double.infinity,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: backgroundColor,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor:
+                            (revenueData!['progressPercentage'] as double)
+                                .clamp(0.0, 1.0),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: cardGreen,
+                            borderRadius: BorderRadius.circular(4),
                           ),
                         ),
                       ),
-
-                      const SizedBox(height: 8),
-
-                      // Value Text
-                      Text(
-                        "${formatCurrency(revenueData!['currentRevenue'])} / ${formatCurrency(revenueData!['targetAmount'])}",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: cardGreen,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ] else ...[
-                  // No target message
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        "What about Current Revenue",
-                        style: TextStyle(
-                          fontSize: 25,
-                          fontWeight: FontWeight.bold,
-                          color: primaryColor,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
                     ),
-                  ),
-                ],
+
+                    const SizedBox(height: 8),
+
+                    // Value Text
+                    Text(
+                      "${formatCurrency(revenueData!['currentRevenue'])} / ${formatCurrency(revenueData!['targetAmount'])}",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: cardGreen,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ],
             ),
           ),

@@ -1,3 +1,4 @@
+import 'package:exfactor/utils/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:exfactor/services/superbase_service.dart';
 import 'package:exfactor/models/user_model.dart';
@@ -208,7 +209,19 @@ class _AdminUpdateUserScreenState extends State<AdminUpdateUserScreen> {
       );
     }
     return Scaffold(
-      appBar: AppBar(title: const Text('Update Profile')),
+      backgroundColor: backgroundColor,
+      appBar: AppBar(
+        title: const Text(
+          'Update Profile',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+        toolbarHeight: 70,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        centerTitle: true,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -296,14 +309,14 @@ class _AdminUpdateUserScreenState extends State<AdminUpdateUserScreen> {
                       EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 15),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _saving ? null : _handleSave,
                   child: _saving
                       ? const CircularProgressIndicator()
-                      : const Text('Save'),
+                      : const Text('Submit'),
                 ),
               ),
             ],

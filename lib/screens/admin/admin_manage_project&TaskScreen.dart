@@ -260,7 +260,7 @@ class _AdminProjectManageState extends State<AdminProjectManage> {
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               const SizedBox(
-                height: 20,
+                height: 10,
               ),
               // 1st row Summerize Project Overview
               Container(
@@ -278,7 +278,6 @@ class _AdminProjectManageState extends State<AdminProjectManage> {
                         : UserUtils.buildStatusSummaryCard(
                             statusProjectOverview,
                             onTap: (index) {
-                              // 0: Pending, 1: Working, 2: Over Due
                               String categoryTitle =
                                   statusProjectOverview[index]['label'];
                               List<Map<String, dynamic>> projectList;
@@ -303,9 +302,7 @@ class _AdminProjectManageState extends State<AdminProjectManage> {
                   ],
                 ),
               ),
-              const SizedBox(
-                height: 20,
-              ),
+
               // 2nd Row Summerize Task Overview
               Container(
                 child: Column(
@@ -349,7 +346,7 @@ class _AdminProjectManageState extends State<AdminProjectManage> {
               ),
 
               const SizedBox(
-                height: 20,
+                height: 10,
               ),
               const Text("Manage Projects",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),

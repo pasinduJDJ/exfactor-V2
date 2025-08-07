@@ -22,7 +22,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
   final _positionController = TextEditingController();
   bool _isLoading = false;
   String? _selectedRole;
-  final List<String> _roles = ['Technician', 'Sales', 'Supervisor', 'Admin'];
+  final List<String> _roles = ['Technical', 'Sales', 'Supervisor', 'Admin'];
   bool _obscurePassword = true; // Added for password visibility
 
   @override
@@ -123,20 +123,24 @@ class _AddUserScreenState extends State<AddUserScreen> {
     return Scaffold(
       backgroundColor: KbgColor,
       appBar: AppBar(
-        title: const Text("Add New Team Member"),
-        backgroundColor: kPrimaryColor,
-        foregroundColor: kWhite,
+        title: const Text("Add New Member"),
+        toolbarHeight: 70,
+        backgroundColor: Colors.white,
         elevation: 1,
-        iconTheme: const IconThemeData(color: kWhite),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 15),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 20),
+              const SizedBox(height: 15),
               const Text("Enter Employee Register Number"),
               TextFormField(
                 controller: _memberIdController,
@@ -147,7 +151,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
                 ),
                 keyboardType: TextInputType.number,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
               const Text("Enter First Name"),
               TextFormField(
                 controller: _firstNameController,
@@ -156,7 +160,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
                   fillColor: Colors.white,
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
               const Text("Enter Last Name"),
               TextFormField(
                 controller: _lastNameController,
@@ -165,18 +169,17 @@ class _AddUserScreenState extends State<AddUserScreen> {
                   fillColor: Colors.white,
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
               const Text("Enter Email Address"),
               TextFormField(
                   controller: _emailController,
                   decoration: const InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
-                    // border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.emailAddress,
                   validator: validateEmail),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
               const Text("Select Role"),
               DropdownButtonFormField<String>(
                 value: _selectedRole,
@@ -193,7 +196,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
                 onChanged: (val) => setState(() => _selectedRole = val),
                 validator: (val) => val == null ? 'Please select a role' : null,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
               const Text("Enter Position"),
               TextFormField(
                 controller: _positionController,
@@ -202,7 +205,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
                   fillColor: Colors.white,
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
               const Text("Enter Password"),
               TextFormField(
                 controller: _passwordController,
@@ -223,9 +226,9 @@ class _AddUserScreenState extends State<AddUserScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 15),
               CustomButton(
-                text: 'Create User',
+                text: 'Submit',
                 onPressed: _handleSubmit,
                 isLoading: _isLoading,
                 backgroundColor: kPrimaryColor,

@@ -80,13 +80,24 @@ class _AdminProfileState extends State<AdminProfile> {
       return Center(child: Text('User not found.'));
     }
     return Scaffold(
-      appBar: AppBar(title: Text("Admin Profile")),
-      backgroundColor: const Color(0xFFe9ecef),
+      appBar: AppBar(
+        title: Text(
+          "Admin Profile",
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+        toolbarHeight: 70,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        centerTitle: true,
+      ),
+      backgroundColor: backgroundColor,
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: 10),
         child: Column(
           children: [
-            const SizedBox(height: 16),
+            const SizedBox(height: 15),
             CircleAvatar(
               radius: 70,
               backgroundColor: Colors.white,
@@ -98,7 +109,7 @@ class _AdminProfileState extends State<AdminProfile> {
             ),
             const SizedBox(height: 16),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -107,19 +118,19 @@ class _AdminProfileState extends State<AdminProfile> {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(
-                    height: 10,
+                    height: 5,
                   ),
                   _infoCard({
                     'First Name': _user?.firstName ?? '',
                     'Last Name': _user?.lastName ?? '',
                   }),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 5),
                   const Text(
                     "Company Information",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(
-                    height: 10,
+                    height: 5,
                   ),
                   _infoCard({
                     'Position': _user?.position ?? '',
@@ -127,45 +138,82 @@ class _AdminProfileState extends State<AdminProfile> {
                     'Email Address': _user?.email ?? '',
                     'Mobile Number': _user?.mobile ?? '',
                   }),
-                  const SizedBox(height: 16),
-                  CustomButton(
-                    text: "Update",
-                    onPressed: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              AdminUpdateUserScreen(memberId: _user!.memberId),
+                  const SizedBox(height: 10),
+                  // --- Start: New Card for Admin Actions ---
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
                         ),
-                      );
-                      if (_memberId != null) await _fetchUser(_memberId!);
-                    },
-                    backgroundColor: cardGreen,
-                    width: double.infinity,
-                  ),
-                  const SizedBox(height: 5),
-                  CustomButton(
-                    text: "Log Out",
-                    onPressed: () {
-                      handleLogout(context);
-                    },
-                    backgroundColor: cardRed,
-                    width: double.infinity,
-                  ),
-                  const SizedBox(height: 5),
-                  CustomButton(
-                    text: "Reset Password",
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => AdminResetPasswordScreen(),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.edit, color: primaryColor),
+                          title: const Text(
+                            "Update Profile",
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                          trailing: const Icon(
+                            Icons.arrow_forward_ios,
+                            size: 13,
+                            color: primaryColor,
+                          ),
+                          onTap: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => AdminUpdateUserScreen(
+                                    memberId: _user!.memberId),
+                              ),
+                            );
+                            if (_memberId != null) await _fetchUser(_memberId!);
+                          },
                         ),
-                      );
-                    },
-                    backgroundColor: Colors.blueGrey,
-                    width: double.infinity,
+                        const Divider(thickness: 1),
+                        ListTile(
+                          leading: const Icon(
+                            Icons.lock,
+                            color: primaryColor,
+                          ),
+                          title: const Text(
+                            "Reset Password",
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                          trailing: const Icon(
+                            Icons.arrow_forward_ios,
+                            size: 13,
+                            color: primaryColor,
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => AdminResetPasswordScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
+                  // --- End: New Card for Admin Actions ---
                   const SizedBox(height: 16),
                 ],
               ),

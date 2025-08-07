@@ -5,7 +5,7 @@ class UserCard {
   static Widget buildUserGridCard(List<Map<String, String>> users,
       {Function(String)? onUserRemoved}) {
     return Padding(
-      padding: const EdgeInsets.only(top: 20),
+      padding: const EdgeInsets.only(top: 10),
       child: ListView.builder(
         shrinkWrap: true,
         physics:
@@ -14,15 +14,17 @@ class UserCard {
         itemBuilder: (context, i) {
           final u = users[i];
           return Padding(
-            padding:
-                const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+            padding: const EdgeInsets.symmetric(
+              vertical: 8.0,
+            ),
             child: Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
               ),
               elevation: 6,
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
