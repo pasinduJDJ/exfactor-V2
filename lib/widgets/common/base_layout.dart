@@ -130,14 +130,14 @@ class BaseLayout extends StatelessWidget {
             child: Column(
               children: [
                 // Profile Image
-                CircleAvatar(
+                const CircleAvatar(
                   radius: 50,
-                  backgroundImage:
-                      (profileImage != null && profileImage!.isNotEmpty)
-                          ? (profileImage!.startsWith('http')
-                              ? NetworkImage(profileImage!)
-                              : AssetImage(profileImage!) as ImageProvider)
-                          : const AssetImage('assets/images/it-avatar.webp'),
+                  backgroundImage: AssetImage('assets/images/it-avatar.webp'),
+                  // (profileImage != null && profileImage!.isNotEmpty)
+                  //     ? (profileImage!.startsWith('http')
+                  //         ? NetworkImage(profileImage!)
+                  //         : AssetImage(profileImage!) as ImageProvider)
+                  //     : const AssetImage('assets/images/it-avatar.webp'),
                 ),
                 const SizedBox(height: 16),
                 // Title
@@ -219,6 +219,37 @@ class BaseLayout extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+
+          // Company Logo
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 30.0),
+            child: Image.asset(
+              'assets/images/Exfactor.png',
+              height: 50,
+            ),
+            // Container(
+            //   height: 60,
+            //   width: double.infinity,
+            //   decoration: BoxDecoration(
+            //     color: Colors.white,
+            //     borderRadius: BorderRadius.circular(12),
+            //     boxShadow: [
+            //       BoxShadow(
+            //         color: Colors.black.withOpacity(0.1),
+            //         blurRadius: 8,
+            //         offset: const Offset(0, 2),
+            //       ),
+            //     ],
+            //   ),
+            //   child: Padding(
+            //     padding: const EdgeInsets.all(12.0),
+            //     child: Image.asset(
+            //       'assets/images/Exfactor.png',
+            //       fit: BoxFit.contain,
+            //     ),
+            //   ),
+            // ),
           ),
 
           // Logout Button

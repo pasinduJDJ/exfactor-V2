@@ -18,10 +18,14 @@ class UserTaskScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           categoryTitle,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: kPrimaryColor,
-        iconTheme: const IconThemeData(color: Colors.white),
+        toolbarHeight: 70,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        centerTitle: true,
       ),
       body: taskList.isEmpty
           ? const Center(child: Text('No tasks available.'))

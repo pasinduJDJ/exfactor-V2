@@ -96,6 +96,16 @@ class _AdminSingleProjectScreenState extends State<AdminSingleProjectScreen> {
     });
   }
 
+  Future<void> _refreshPreviousScreen() async {
+    try {
+      // This will trigger a refresh when we go back to the previous screen
+      // The previous screen will detect the navigation result and refresh
+      print('Refreshing previous screen data...');
+    } catch (e) {
+      print('Error refreshing previous screen: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -112,7 +122,11 @@ class _AdminSingleProjectScreenState extends State<AdminSingleProjectScreen> {
           toolbarHeight: 70,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () async {
+              // Refresh the previous screen data before going back
+              await _refreshPreviousScreen();
+              Navigator.of(context).pop('refresh_needed');
+            },
           ),
           centerTitle: true,
         ),

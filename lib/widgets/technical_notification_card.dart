@@ -22,9 +22,9 @@ class TechnicalNotificationCard {
         case 'Event':
           return kPrimaryColor;
         case 'Birthday':
-          return cardDarkYellow;
+          return kPrimaryColor;
         case 'News':
-          return cardGreen;
+          return kPrimaryColor;
         default:
           return Colors.grey;
       }
@@ -36,7 +36,7 @@ class TechnicalNotificationCard {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: items.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 16),
+        separatorBuilder: (_, __) => const SizedBox(height: 8),
         itemBuilder: (context, i) {
           final item = items[i];
           final type = item['type'] as String;
@@ -51,8 +51,8 @@ class TechnicalNotificationCard {
                 children: [
                   // 1) Leading icon
                   Container(
-                    width: 36,
-                    height: 36,
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
                       color: _colorForType(type),
                       shape: BoxShape.circle,
@@ -64,7 +64,7 @@ class TechnicalNotificationCard {
                     ),
                   ),
 
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 20),
 
                   // 2) Title / Subtitle / Date
                   Expanded(

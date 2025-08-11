@@ -517,9 +517,16 @@ class SaleService {
   static Future<Map<String, dynamic>?> getMemberAssignedTargets(
       String memberId) async {
     try {
-      // Get member's UUID
-      final userData =
-          await SupabaseService.getUserByMemberId(int.parse(memberId));
+      // Get member's UUID - handle memberId as string properly
+      int memberIdInt;
+      try {
+        memberIdInt = int.parse(memberId);
+      } catch (e) {
+        print('Invalid member ID format: $memberId');
+        return null;
+      }
+
+      final userData = await SupabaseService.getUserByMemberId(memberIdInt);
       if (userData == null) {
         print('No user data found for member ID: $memberId');
         return null;
@@ -544,9 +551,16 @@ class SaleService {
   static Future<Map<String, double>> getMemberAchievedSales(
       String memberId) async {
     try {
-      // Get member's UUID
-      final userData =
-          await SupabaseService.getUserByMemberId(int.parse(memberId));
+      // Get member's UUID - handle memberId as string properly
+      int memberIdInt;
+      try {
+        memberIdInt = int.parse(memberId);
+      } catch (e) {
+        print('Invalid member ID format: $memberId');
+        return _getDefaultAchievedSales();
+      }
+
+      final userData = await SupabaseService.getUserByMemberId(memberIdInt);
       if (userData == null) {
         print('No user data found for member ID: $memberId');
         return _getDefaultAchievedSales();

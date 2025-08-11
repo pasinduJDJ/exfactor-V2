@@ -135,7 +135,7 @@ class _LoginPageState extends State<LoginPage> {
       Navigator.push(context, MaterialPageRoute(builder: (_) {
         return AdminMainScreen(user: userModel);
       }));
-    } else if (userModel.role == 'Technician') {
+    } else if (userModel.role == 'Technical') {
       Navigator.push(context, MaterialPageRoute(builder: (_) {
         return TechnicalMainScreen(user: userModel);
       }));

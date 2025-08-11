@@ -1,8 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:exfactor/utils/colors.dart';
 import 'package:exfactor/widgets/common/custom_button.dart';
 import 'package:exfactor/services/dealService.dart';
-import 'package:exfactor/services/superbase_service.dart';
+import 'package:exfactor/utils/constants.dart';
+import 'package:intl/intl.dart';
+
+// Custom formatter for thousands separator
+class ThousandsFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.isEmpty) {
+      return newValue;
+    }
+
+    // Remove all non-digits and decimal points
+    String text = newValue.text.replaceAll(RegExp(r'[^0-9.]'), '');
+
+    // Ensure only one decimal point
+    List<String> parts = text.split('.');
+    if (parts.length > 2) {
+      text = '${parts[0]}.${parts.sublist(1).join('')}';
+      parts = text.split('.');
+    }
+
+    // Format the integer part with commas
+    if (parts.isNotEmpty && parts[0].isNotEmpty) {
+      final formatter = NumberFormat('#,##0');
+      parts[0] = formatter.format(int.tryParse(parts[0]) ?? 0);
+    }
+
+    String formattedText = parts.join('.');
+
+    return TextEditingValue(
+      text: formattedText,
+      selection: TextSelection.collapsed(offset: formattedText.length),
+    );
+  }
+}
 
 class DealDetailsUpdate extends StatefulWidget {
   final Map<String, dynamic>? dealData;
@@ -39,6 +77,12 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
     _initializeData();
   }
 
+  // Helper method to parse formatted number (remove commas)
+  double _parseFormattedNumber(String text) {
+    if (text.isEmpty) return 0;
+    return double.tryParse(text.replaceAll(',', '')) ?? 0;
+  }
+
   void _initializeData() {
     // Debug logging
     print('=== Deal Details Update Debug ===');
@@ -47,8 +91,13 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
     if (widget.dealData != null) {
       // Populate form fields with existing deal data
       _prospectNameController.text = widget.dealData!['prospect_name'] ?? '';
-      _dealSizeController.text =
-          (widget.dealData!['deal_amount'] ?? 0).toString();
+
+      // Handle deal amount formatting
+      final dealAmount = widget.dealData!['deal_amount'] ?? 0;
+      _dealSizeController.text = formatWithCommas(dealAmount);
+      print(
+          'Deal Size Controller initialized with: ${_dealSizeController.text}');
+
       _productController.text = widget.dealData!['product'] ?? '';
       _cityController.text = widget.dealData!['city'] ?? '';
       _countryController.text = widget.dealData!['country'] ?? '';
@@ -91,6 +140,9 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
 
     if (!_formKey.currentState!.validate()) {
       print('Form validation failed');
+      print('Deal Size Controller text: "${_dealSizeController.text}"');
+      print(
+          'Deal Size Controller is empty: ${_dealSizeController.text.isEmpty}');
       return;
     }
 
@@ -100,9 +152,20 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
 
     try {
       // Validate deal data using DealService
+      // Parse deal size to remove commas before validation
+      final parsedDealSize =
+          _parseFormattedNumber(_dealSizeController.text.trim());
+
+      print('=== Deal Size Validation Debug ===');
+      print('Raw deal size text: "${_dealSizeController.text.trim()}"');
+      print('Parsed deal size: $parsedDealSize');
+      print('Parsed deal size string: "${parsedDealSize.toString()}"');
+      print('===============================');
+
       final validationErrors = DealService.validateDealData(
         prospectName: _prospectNameController.text.trim(),
-        dealSize: _dealSizeController.text.trim(),
+        dealSize:
+            parsedDealSize.toString(), // Pass as string number without commas
         product: _productController.text.trim(),
         city: _cityController.text.trim(),
         country: _countryController.text.trim(),
@@ -115,6 +178,12 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
 
       // Check for validation errors
       if (validationErrors.isNotEmpty) {
+        print('=== Validation Errors Found ===');
+        validationErrors.forEach((key, value) {
+          print('$key: $value');
+        });
+        print('===============================');
+
         final errorMessage = validationErrors.values.firstWhere(
           (error) => error != null,
           orElse: () => 'Please check your input',
@@ -148,7 +217,7 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
       final success = await DealService.updateDeal(
         dealId: widget.dealData!['id'],
         prospectName: _prospectNameController.text.trim(),
-        dealSize: double.parse(_dealSizeController.text.trim()),
+        dealSize: _parseFormattedNumber(_dealSizeController.text.trim()),
         product: _productController.text.trim(),
         city: _cityController.text.trim(),
         country: _countryController.text.trim(),
@@ -231,8 +300,7 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _buildTextField('Prospect Name', _prospectNameController),
-              _buildTextField('Deal Size', _dealSizeController,
-                  keyboardType: TextInputType.number),
+              _buildFormattedNumberField('Deal Size', _dealSizeController),
               _buildTextField('Product', _productController),
               _buildTextField('City', _cityController),
               _buildTextField('Country', _countryController),
@@ -254,9 +322,9 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
               _buildReadOnlyField(
                   'Created Date', _formatDate(widget.dealData?['created_at'])),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 15),
               CustomButton(
-                text: _isSubmitting ? 'Updating Deal...' : 'Update Deal',
+                text: _isSubmitting ? 'Submitting...' : 'Submit',
                 backgroundColor: kPrimaryColor,
                 width: double.infinity,
                 height: 48,
@@ -396,6 +464,60 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
                 fontWeight: FontWeight.w500,
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Build formatted number field with thousands separator
+  Widget _buildFormattedNumberField(
+      String label, TextEditingController controller) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(fontSize: 14, color: Colors.black87),
+          ),
+          const SizedBox(height: 4),
+          TextFormField(
+            controller: controller,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              ThousandsFormatter(),
+            ],
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Colors.white,
+              prefixText: "LKR ",
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: kPrimaryColor),
+              ),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter $label';
+              }
+              final amount = double.tryParse(value.replaceAll(',', ''));
+              if (amount == null || amount <= 0) {
+                return 'Please enter a valid amount';
+              }
+              return null;
+            },
           ),
         ],
       ),

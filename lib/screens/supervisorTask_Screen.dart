@@ -1,3 +1,4 @@
+import 'package:exfactor/utils/colors.dart';
 import 'package:flutter/material.dart';
 import 'supervisor/supervisor_single_task.dart';
 
@@ -14,24 +15,29 @@ class SupervisorTaskScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         title: Text(
           categoryTitle,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.blue,
-        iconTheme: const IconThemeData(color: Colors.white),
+        toolbarHeight: 70,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        centerTitle: true,
       ),
       body: taskList.isEmpty
           ? const Center(child: Text('No tasks available.'))
           : ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 10),
+              padding: const EdgeInsets.symmetric(vertical: 5),
               itemCount: taskList.length,
               itemBuilder: (context, index) {
                 final task = taskList[index];
                 return Card(
                   margin:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
                   child: ListTile(
                     title: Text(task['title'] ?? 'No Title'),
                     subtitle: Text('Start Date: ${task['start_date'] ?? '-'}'),

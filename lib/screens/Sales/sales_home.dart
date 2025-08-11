@@ -78,11 +78,11 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
           : userAssignedTargets == null
               ? _buildNoTargetsView()
               : SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 15,
+                  ),
                   child: Column(
                     children: [
-                      const SizedBox(height: 30),
-
                       // Section 1: Monthly Sales Card
                       _buildMonthlySalesCard(),
 

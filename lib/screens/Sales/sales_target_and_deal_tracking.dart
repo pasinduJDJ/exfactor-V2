@@ -87,8 +87,6 @@ class _SalesTaskScreenState extends State<SalesTaskScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   child: Column(
                     children: [
-                      const SizedBox(height: 30),
-
                       // Section 1: Monthly Sales Analyze Card
                       _buildMonthlySalesAnalyzeCard(),
 

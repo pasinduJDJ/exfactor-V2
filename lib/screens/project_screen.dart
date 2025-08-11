@@ -20,13 +20,17 @@ class _ProjectScreenState extends State<ProjectScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: kPrimaryColor,
         title: Text(
           widget.categoryTitle,
-          style: const TextStyle(color: Colors.white),
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
+        centerTitle: true,
+        toolbarHeight: 70,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: widget.projectList.isEmpty
           ? const Center(child: Text('No projects available.'))

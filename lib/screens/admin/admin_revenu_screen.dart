@@ -33,54 +33,73 @@ class _RevenueScreenState extends State<RevenueScreen> {
               (user['role'] ?? '').toString().toLowerCase() == 'sales')
           .toList();
 
+      print('Found ${salesUsers.length} sales users');
+
       // Get revenue data for each sales member
       final membersWithRevenue = <Map<String, dynamic>>[];
 
       for (final user in salesUsers) {
-        final memberId = user['member_id'].toString();
-        final memberName =
-            '${user['first_name'] ?? ''} ${user['last_name'] ?? ''}'.trim();
+        try {
+          final memberId =
+              user['member_id']; // Remove .toString() to keep as int
+          final memberName =
+              '${user['first_name'] ?? ''} ${user['last_name'] ?? ''}'.trim();
 
-        // Get member's assigned targets
-        final assignedTargets =
-            await SaleService.getMemberAssignedTargets(memberId);
+          print('Processing sales member: $memberName (ID: $memberId)');
 
-        // Get member's achieved sales
-        final achievedSales =
-            await SaleService.getMemberAchievedSales(memberId);
+          // Get member's assigned targets
+          final assignedTargets =
+              await SaleService.getMemberAssignedTargets(memberId.toString());
 
-        // Calculate current period targets and achievements
-        final annualTarget = SaleService.getAnnualTarget(assignedTargets);
-        final quarterlyTarget =
-            SaleService.getCurrentQuarterTarget(assignedTargets);
-        final monthlyTarget =
-            SaleService.getCurrentMonthTarget(assignedTargets);
+          // Get member's achieved sales
+          final achievedSales =
+              await SaleService.getMemberAchievedSales(memberId.toString());
 
-        final annualAchieved = achievedSales['annual'] ?? 0.0;
-        final quarterlyAchieved = achievedSales['quarterly'] ?? 0.0;
-        final monthlyAchieved = achievedSales['monthly'] ?? 0.0;
+          // Calculate current period targets and achievements
+          final annualTarget = SaleService.getAnnualTarget(assignedTargets);
+          final quarterlyTarget =
+              SaleService.getCurrentQuarterTarget(assignedTargets);
+          final monthlyTarget =
+              SaleService.getCurrentMonthTarget(assignedTargets);
 
-        // Calculate overall progress (using annual as primary)
-        final totalTarget = annualTarget;
-        final totalAchieved = annualAchieved;
-        final progressPercentage =
-            totalTarget > 0 ? (totalAchieved / totalTarget) * 100 : 0;
+          final annualAchieved = achievedSales['annual'] ?? 0.0;
+          final quarterlyAchieved = achievedSales['quarterly'] ?? 0.0;
+          final monthlyAchieved = achievedSales['monthly'] ?? 0.0;
 
-        membersWithRevenue.add({
-          'member_id': memberId,
-          'member_name': memberName,
-          'assigned_targets': assignedTargets,
-          'achieved_sales': achievedSales,
-          'annual_target': annualTarget,
-          'quarterly_target': quarterlyTarget,
-          'monthly_target': monthlyTarget,
-          'annual_achieved': annualAchieved,
-          'quarterly_achieved': quarterlyAchieved,
-          'monthly_achieved': monthlyAchieved,
-          'total_target': totalTarget,
-          'total_achieved': totalAchieved,
-          'progress_percentage': progressPercentage,
-        });
+          // Calculate overall progress (using annual as primary)
+          final totalTarget = annualTarget;
+          final totalAchieved = annualAchieved;
+          final progressPercentage =
+              totalTarget > 0 ? (totalAchieved / totalTarget) * 100 : 0;
+
+          print(
+              'Member $memberName - Target: $totalTarget, Achieved: $totalAchieved, Progress: $progressPercentage%');
+
+          // Validate data before adding
+          if (memberName.isNotEmpty) {
+            membersWithRevenue.add({
+              'member_id': memberId.toString(),
+              'member_name': memberName,
+              'assigned_targets': assignedTargets,
+              'achieved_sales': achievedSales,
+              'annual_target': annualTarget,
+              'quarterly_target': quarterlyTarget,
+              'monthly_target': monthlyTarget,
+              'annual_achieved': annualAchieved,
+              'quarterly_achieved': quarterlyAchieved,
+              'monthly_achieved': monthlyAchieved,
+              'total_target': totalTarget,
+              'total_achieved': totalAchieved,
+              'progress_percentage': progressPercentage,
+            });
+          } else {
+            print('Skipping member with empty name');
+          }
+        } catch (e) {
+          print('Error processing sales member ${user['first_name']}: $e');
+          // Continue with other members even if one fails
+          continue;
+        }
       }
 
       setState(() {
@@ -100,37 +119,97 @@ class _RevenueScreenState extends State<RevenueScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: 70,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
-          onPressed: () => Navigator.of(context).pop(),
+    try {
+      return Scaffold(
+        appBar: AppBar(
+          toolbarHeight: 70,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: const Text(
+            'Revenue Overview',
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          ),
+          centerTitle: true,
         ),
-        title: const Text(
-          'Revenue Overview',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
-      backgroundColor: backgroundColor,
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : salesMembers.isEmpty
-              ? _buildNoMembersView()
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 20),
-                      ...salesMembers
-                          .map((member) => _buildMemberRevenueCard(member))
-                          .toList(),
-                      const SizedBox(height: 20),
-                    ],
+        backgroundColor: backgroundColor,
+        body: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : salesMembers.isEmpty
+                ? _buildNoMembersView()
+                : SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 20),
+                        ...salesMembers
+                            .map((member) => _buildMemberRevenueCard(member))
+                            .toList(),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
                   ),
+      );
+    } catch (e) {
+      print('Error building revenue screen: $e');
+      return Scaffold(
+        appBar: AppBar(
+          toolbarHeight: 70,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: const Text(
+            'Revenue Overview',
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          ),
+          centerTitle: true,
+        ),
+        backgroundColor: backgroundColor,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.red[400],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Something went wrong',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red[600],
                 ),
-    );
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Please try again or contact support',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[500],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    isLoading = true;
+                  });
+                  _loadSalesMembersData();
+                },
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
   }
 
   Widget _buildNoMembersView() {
@@ -168,11 +247,11 @@ class _RevenueScreenState extends State<RevenueScreen> {
   }
 
   Widget _buildMemberRevenueCard(Map<String, dynamic> member) {
-    final memberName = member['member_name'] as String;
-    final totalTarget = member['total_target'] as double;
-    final totalAchieved = member['total_achieved'] as double;
-    final progressPercentage = member['progress_percentage'] as double;
-    final memberId = member['member_id'] as String;
+    final memberName = member['member_name'] as String? ?? 'Unknown Member';
+    final totalTarget = (member['total_target'] ?? 0).toDouble();
+    final totalAchieved = (member['total_achieved'] ?? 0).toDouble();
+    final progressPercentage = (member['progress_percentage'] ?? 0).toDouble();
+    final memberId = member['member_id'] as String? ?? '';
 
     return Container(
       width: double.infinity,

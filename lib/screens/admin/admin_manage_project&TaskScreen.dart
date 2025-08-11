@@ -76,34 +76,80 @@ class _AdminProjectManageState extends State<AdminProjectManage> {
     int pending = 0;
     int onProgress = 0;
     int complete = 0;
+    int archived = 0;
     final now = DateTime.now();
+
+    print('Fetching project overview for ${projects.length} projects');
+
     for (final p in projects) {
-      final status = (p['status'] ?? '').toString().toLowerCase();
-      final endDateStr = p['end_date'] ?? p['project_end_date'] ?? '';
+      final status = (p['status'] ?? '').toString().trim();
+
+      // Check all possible date field names
+      final endDateStr =
+          p['end_date'] ?? p['project_end_date'] ?? p['delivery_date'] ?? '';
+      final startDateStr = p['start_date'] ??
+          p['project_start_date'] ??
+          p['commencement_date'] ??
+          '';
+
+      print('Project overview: ${p['title']} - Status: "$status"');
+      print(
+          'Date fields found: end_date=${p['end_date']}, project_end_date=${p['project_end_date']}, delivery_date=${p['delivery_date']}');
+      print(
+          'Start date fields found: start_date=${p['start_date']}, project_start_date=${p['project_start_date']}, commencement_date=${p['commencement_date']}');
+
       DateTime? endDate;
+
       try {
         endDate = endDateStr != '' ? DateTime.parse(endDateStr) : null;
       } catch (_) {
         endDate = null;
       }
-      if (status == 'pending') {
+
+      print(
+          'Project overview: ${p['title']} - Status: "$status" - End Date: $endDateStr - Parsed Date: $endDate');
+      print('Raw project data for overview: $p');
+
+      // Normalize status for comparison
+      final normalizedStatus = status.toLowerCase();
+
+      if (normalizedStatus == 'pending') {
         pending++;
-      } else if (status == 'complete') {
+        print('Project overview: ${p['title']} -> PENDING');
+      } else if (normalizedStatus == 'complete' ||
+          normalizedStatus == 'completed') {
         complete++;
-      } else if (status == 'on progress' || status == 'progress') {
+        print('Project overview: ${p['title']} -> COMPLETE');
+      } else if (normalizedStatus == 'archived') {
+        archived++;
+        print('Project overview: ${p['title']} -> ARCHIVED');
+      } else if (normalizedStatus == 'on progress' ||
+          normalizedStatus == 'progress' ||
+          normalizedStatus == 'in progress') {
+        // Check if On Progress project is overdue (past end date)
         if (endDate != null && endDate.isBefore(now)) {
           overdue++;
+          print(
+              'Project overview: ${p['title']} -> OVERDUE (On Progress but past end date)');
         } else {
           onProgress++;
+          print('Project overview: ${p['title']} -> IN PROGRESS');
         }
-      } else if (endDate != null && endDate.isBefore(now)) {
-        overdue++;
+      } else {
+        // If status doesn't match any known status, add to pending as default
+        pending++;
+        print(
+            'Project overview: ${p['title']} -> PENDING (unknown status: "$status")');
       }
     }
+
+    print(
+        'Project overview counts - Pending: $pending, In Progress: $onProgress, Overdue: $overdue, Complete: $complete, Archived: $archived');
+
     setState(() {
       statusProjectOverview = [
         {'label': 'PENDING', 'count': pending, 'color': kWhite},
-        {'label': 'WORKING', 'count': onProgress, 'color': kWhite},
+        {'label': 'In Progress', 'count': onProgress, 'color': kWhite},
         {'label': 'OVER DUE', 'count': overdue, 'color': cardRed},
         // Optionally add complete count here if you want to show it in the UI
         // {'label': 'COMPLETE', 'count': complete, 'color': Colors.blue},
@@ -123,33 +169,59 @@ class _AdminProjectManageState extends State<AdminProjectManage> {
     int onProgress = 0;
     int complete = 0;
     final now = DateTime.now();
+
+    print('Fetching task overview for ${tasks.length} tasks');
+
     for (final t in tasks) {
-      final status = (t['status'] ?? '').toString().toLowerCase();
+      final status = (t['status'] ?? '').toString().trim();
       final endDateStr = t['end_date'] ?? t['project_end_date'] ?? '';
+
+      print('Task overview: ${t['title'] ?? 'No Title'} - Status: "$status"');
+
       DateTime? endDate;
       try {
         endDate = endDateStr != '' ? DateTime.parse(endDateStr) : null;
       } catch (_) {
         endDate = null;
       }
-      if (status == 'pending') {
+
+      // Normalize status for comparison
+      final normalizedStatus = status.toLowerCase();
+
+      if (normalizedStatus == 'pending') {
         pending++;
-      } else if (status == 'complete') {
+        print('Task overview: ${t['title'] ?? 'No Title'} -> PENDING');
+      } else if (normalizedStatus == 'complete' ||
+          normalizedStatus == 'completed') {
         complete++;
-      } else if (status == 'on progress' || status == 'progress') {
+        print('Task overview: ${t['title'] ?? 'No Title'} -> COMPLETE');
+      } else if (normalizedStatus == 'on progress' ||
+          normalizedStatus == 'progress' ||
+          normalizedStatus == 'in progress') {
+        // Check if On Progress task is overdue (past end date)
         if (endDate != null && endDate.isBefore(now)) {
           overdue++;
+          print(
+              'Task overview: ${t['title'] ?? 'No Title'} -> OVERDUE (On Progress but past end date)');
         } else {
           onProgress++;
+          print('Task overview: ${t['title'] ?? 'No Title'} -> IN PROGRESS');
         }
-      } else if (endDate != null && endDate.isBefore(now)) {
-        overdue++;
+      } else {
+        // If status doesn't match any known status, add to pending as default
+        pending++;
+        print(
+            'Task overview: ${t['title'] ?? 'No Title'} -> PENDING (unknown status: "$status")');
       }
     }
+
+    print(
+        'Task overview counts - Pending: $pending, In Progress: $onProgress, Overdue: $overdue, Complete: $complete');
+
     setState(() {
       statusTaskOverView = [
         {'label': 'PENDING', 'count': pending, 'color': kWhite},
-        {'label': 'WORKING', 'count': onProgress, 'color': kWhite},
+        {'label': 'In Progress', 'count': onProgress, 'color': kWhite},
         {'label': 'OVER DUE', 'count': overdue, 'color': cardRed},
         // Optionally add complete count here if you want to show it in the UI
         // {'label': 'COMPLETE', 'count': complete, 'color': Colors.blue},
@@ -170,31 +242,73 @@ class _AdminProjectManageState extends State<AdminProjectManage> {
     List<Map<String, dynamic>> pending = [];
     List<Map<String, dynamic>> complete = [];
     List<Map<String, dynamic>> archived = [];
+
+    print('Total projects fetched: ${projects.length}');
+
     for (final p in projects) {
-      final status = (p['status'] ?? '').toString().toLowerCase();
-      final endDateStr = p['end_date'] ?? p['project_end_date'] ?? '';
+      final status = (p['status'] ?? '').toString().trim();
+
+      // Check all possible date field names
+      final endDateStr =
+          p['end_date'] ?? p['project_end_date'] ?? p['delivery_date'] ?? '';
+      final startDateStr = p['start_date'] ??
+          p['project_start_date'] ??
+          p['commencement_date'] ??
+          '';
+
+      print('Project: ${p['title']} - Status: "$status"');
+      print(
+          'Date fields found: end_date=${p['end_date']}, project_end_date=${p['project_end_date']}, delivery_date=${p['delivery_date']}');
+      print(
+          'Start date fields found: start_date=${p['start_date']}, project_start_date=${p['project_start_date']}, commencement_date=${p['commencement_date']}');
+
       DateTime? endDate;
+
       try {
         endDate = endDateStr != '' ? DateTime.parse(endDateStr) : null;
       } catch (_) {
         endDate = null;
       }
-      if (status == 'pending') {
+
+      print(
+          'Project: ${p['title']} - Status: "$status" - End Date: $endDateStr - Parsed Date: $endDate');
+      print('Raw project data: $p');
+
+      // Normalize status for comparison
+      final normalizedStatus = status.toLowerCase();
+
+      if (normalizedStatus == 'pending') {
         pending.add(p);
-      } else if (status == 'complete') {
+        print('Added to pending: ${p['title']}');
+      } else if (normalizedStatus == 'complete' ||
+          normalizedStatus == 'completed') {
         complete.add(p);
-      } else if (status == 'on progress' || status == 'progress') {
+        print('Added to complete: ${p['title']}');
+      } else if (normalizedStatus == 'archived') {
+        archived.add(p);
+        print('Added to archived: ${p['title']}');
+      } else if (normalizedStatus == 'on progress' ||
+          normalizedStatus == 'progress' ||
+          normalizedStatus == 'in progress') {
+        // Check if On Progress project is overdue (past end date)
         if (endDate != null && endDate.isBefore(now)) {
           overdue.add(p);
+          print(
+              'Added to overdue (On Progress but past end date): ${p['title']}');
         } else {
           inProgress.add(p);
+          print('Added to in progress: ${p['title']}');
         }
-      } else if (status == 'archived') {
-        archived.add(p);
-      } else if (endDate != null && endDate.isBefore(now)) {
-        overdue.add(p);
+      } else {
+        // If status doesn't match any known status, add to pending as default
+        pending.add(p);
+        print('Added to pending (unknown status: "$status"): ${p['title']}');
       }
     }
+
+    print(
+        'Final counts - Pending: ${pending.length}, In Progress: ${inProgress.length}, Overdue: ${overdue.length}, Complete: ${complete.length}, Archived: ${archived.length}');
+
     setState(() {
       inProgressProjects = inProgress;
       overdueProjects = overdue;
@@ -217,29 +331,55 @@ class _AdminProjectManageState extends State<AdminProjectManage> {
     List<Map<String, dynamic>> overdue = [];
     List<Map<String, dynamic>> pending = [];
     List<Map<String, dynamic>> complete = [];
+
+    print('Total tasks fetched: ${tasks.length}');
+
     for (final t in tasks) {
-      final status = (t['status'] ?? '').toString().toLowerCase();
+      final status = (t['status'] ?? '').toString().trim();
       final endDateStr = t['end_date'] ?? t['project_end_date'] ?? '';
+
+      print('Task: ${t['title'] ?? 'No Title'} - Status: "$status"');
+
       DateTime? endDate;
       try {
         endDate = endDateStr != '' ? DateTime.parse(endDateStr) : null;
       } catch (_) {
         endDate = null;
       }
-      if (status == 'pending') {
+
+      // Normalize status for comparison
+      final normalizedStatus = status.toLowerCase();
+
+      if (normalizedStatus == 'pending') {
         pending.add(t);
-      } else if (status == 'complete') {
+        print('Added to pending: ${t['title'] ?? 'No Title'}');
+      } else if (normalizedStatus == 'complete' ||
+          normalizedStatus == 'completed') {
         complete.add(t);
-      } else if (status == 'on progress' || status == 'progress') {
+        print('Added to complete: ${t['title'] ?? 'No Title'}');
+      } else if (normalizedStatus == 'on progress' ||
+          normalizedStatus == 'progress' ||
+          normalizedStatus == 'in progress') {
+        // Check if On Progress task is overdue (past end date)
         if (endDate != null && endDate.isBefore(now)) {
           overdue.add(t);
+          print(
+              'Added to overdue (On Progress but past end date): ${t['title'] ?? 'No Title'}');
         } else {
           inProgress.add(t);
+          print('Added to in progress: ${t['title'] ?? 'No Title'}');
         }
-      } else if (endDate != null && endDate.isBefore(now)) {
-        overdue.add(t);
+      } else {
+        // If status doesn't match any known status, add to pending as default
+        pending.add(t);
+        print(
+            'Added to pending (unknown status: "$status"): ${t['title'] ?? 'No Title'}');
       }
     }
+
+    print(
+        'Final task counts - Pending: ${pending.length}, In Progress: ${inProgress.length}, Overdue: ${overdue.length}, Complete: ${complete.length}');
+
     setState(() {
       inProgressTasks = inProgress;
       overdueTasks = overdue;
@@ -393,14 +533,22 @@ class _AdminProjectManageState extends State<AdminProjectManage> {
                 onToggle: () =>
                     setState(() => showProjectProgress = !showProjectProgress),
                 groupList: inProgressProjects,
-                onSeeMore: (project) {
-                  Navigator.push(
+                onSeeMore: (project) async {
+                  final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => AdminSingleProjectScreen(
                           projectId: project['project_id']?.toString() ?? ''),
                     ),
                   );
+
+                  // Check if we need to refresh the data
+                  if (result == 'refresh_needed') {
+                    print(
+                        'Refreshing project data after returning from single project screen...');
+                    await fetchProjectOverview();
+                    await fetchProjectLists();
+                  }
                 },
               ),
               const SizedBox(height: 10),

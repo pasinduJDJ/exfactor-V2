@@ -4,6 +4,8 @@ import '../../utils/colors.dart';
 import '../../services/superbase_service.dart';
 import '../../models/task_model.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:exfactor/services/projectService.dart';
+import 'package:exfactor/services/taskService.dart';
 
 class AdminUpdateTaskScreen extends StatefulWidget {
   final String taskId;
@@ -22,16 +24,15 @@ class _AdminUpdateTaskScreenState extends State<AdminUpdateTaskScreen> {
   final _membersController = TextEditingController();
   String? _selectedStatus;
   int? _selectedProjectId;
-  int? _selectedSupervisorId;
-  bool _isLoading = false;
-  TaskModel? _task;
   List<Map<String, dynamic>> _projects = [];
-  List<Map<String, dynamic>> _supervisors = [];
   List<Map<String, dynamic>> _users = [];
   List<int> _selectedMemberIds = [];
-  String _supervisorName = '';
+  String? _supervisorName; // Keep this for displaying supervisor name
+  bool _isLoadingSupervisor = false; // Keep this for loading state
   DateTime? _startDate;
   DateTime? _endDate;
+  bool _isLoading = false;
+  TaskModel? _task; // Add back the missing _task variable
 
   static const List<String> _statusOptions = [
     'Pending',
@@ -44,7 +45,6 @@ class _AdminUpdateTaskScreenState extends State<AdminUpdateTaskScreen> {
   void initState() {
     super.initState();
     _loadProjects();
-    _loadSupervisors();
     _loadUsers();
     _loadTask();
   }
@@ -53,13 +53,6 @@ class _AdminUpdateTaskScreenState extends State<AdminUpdateTaskScreen> {
     final projects = await SupabaseService.getAllProjects();
     setState(() {
       _projects = projects;
-    });
-  }
-
-  Future<void> _loadSupervisors() async {
-    final supervisors = await SupabaseService.getSupervisors();
-    setState(() {
-      _supervisors = supervisors;
     });
   }
 
@@ -97,7 +90,7 @@ class _AdminUpdateTaskScreenState extends State<AdminUpdateTaskScreen> {
     _membersController.text = _selectedMemberIds.map((id) {
       final user =
           _users.firstWhere((u) => u['member_id'] == id, orElse: () => {});
-      if (user != null) {
+      if (user.isNotEmpty) {
         return '${user['first_name'] ?? ''} ${user['last_name'] ?? ''}';
       }
       return id.toString();
@@ -107,17 +100,85 @@ class _AdminUpdateTaskScreenState extends State<AdminUpdateTaskScreen> {
       orElse: () => _statusOptions.first,
     );
     _selectedProjectId = _task!.pId;
-    _selectedSupervisorId = _task!.supervisorId;
-    // Set supervisor name
-    if (_selectedSupervisorId != null) {
-      final sup = _supervisors.firstWhere(
-          (s) => s['member_id'] == _selectedSupervisorId,
+    // Set supervisor name from cached users if present
+    if (_task!.supervisorId != null) {
+      final sup = _users.firstWhere(
+          (s) => s['member_id'] == _task!.supervisorId,
           orElse: () => {});
-      if (sup != null) {
+      if (sup.isNotEmpty) {
         _supervisorName = '${sup['first_name']} ${sup['last_name']}';
       }
     }
     setState(() {});
+    // Ensure we also load via project to handle cases where supervisor comes via project
+    await _loadSupervisorInfo();
+  }
+
+  // Load supervisor information for the project
+  Future<void> _loadSupervisorInfo() async {
+    if (_task?.pId == null) {
+      print('No project ID available for supervisor lookup');
+      return;
+    }
+
+    setState(() {
+      _isLoadingSupervisor = true;
+    });
+
+    try {
+      print('Loading supervisor info for project ID: ${_task!.pId}');
+
+      // Get project details including supervisor ID
+      final project = await ProjectService.getProjectById(_task!.pId);
+
+      if (project != null && project['supervisor_id'] != null) {
+        final dynamic rawSupervisorId = project['supervisor_id'];
+        final int? supervisorId = rawSupervisorId is int
+            ? rawSupervisorId
+            : int.tryParse(rawSupervisorId.toString());
+        if (supervisorId == null) {
+          setState(() {
+            _supervisorName = 'Supervisor not assigned';
+          });
+        } else {
+          print('Project supervisor ID: $supervisorId');
+
+          // Get supervisor user details
+          final supervisor = await TaskService.getSupervisorById(supervisorId);
+
+          if (supervisor != null) {
+            final firstName = supervisor['first_name'] ?? '';
+            final lastName = supervisor['last_name'] ?? '';
+            final fullName = '$firstName $lastName'.trim();
+
+            setState(() {
+              _supervisorName =
+                  fullName.isEmpty ? 'Supervisor not assigned' : fullName;
+            });
+            print('Supervisor name loaded: $_supervisorName');
+          } else {
+            setState(() {
+              _supervisorName = 'Supervisor not assigned';
+            });
+            print('Supervisor not found, setting fallback message');
+          }
+        }
+      } else {
+        setState(() {
+          _supervisorName = 'Supervisor not assigned';
+        });
+        print('Project has no supervisor assigned');
+      }
+    } catch (e) {
+      print('Error loading supervisor info: $e');
+      setState(() {
+        _supervisorName = 'Supervisor not assigned';
+      });
+    } finally {
+      setState(() {
+        _isLoadingSupervisor = false;
+      });
+    }
   }
 
   Future<void> _handleSubmit() async {
@@ -131,14 +192,6 @@ class _AdminUpdateTaskScreenState extends State<AdminUpdateTaskScreen> {
     }
     if (_selectedProjectId == null) {
       _showToast('Please select a project.');
-      return;
-    }
-    if (_selectedSupervisorId == null) {
-      _showToast('Please select a supervisor.');
-      return;
-    }
-    if (_selectedStatus == null) {
-      _showToast('Please select a status.');
       return;
     }
     if (_selectedMemberIds.isEmpty) {
@@ -155,7 +208,7 @@ class _AdminUpdateTaskScreenState extends State<AdminUpdateTaskScreen> {
         members: _selectedMemberIds.join(','),
         status: _selectedStatus!,
         pId: _selectedProjectId!,
-        supervisorId: _selectedSupervisorId,
+        supervisorId: _task!.supervisorId,
       );
       await SupabaseService.updateTask(updatedTask);
       _showToast('Task updated successfully!');
@@ -225,7 +278,7 @@ class _AdminUpdateTaskScreenState extends State<AdminUpdateTaskScreen> {
                       });
                     }),
                     const SizedBox(height: 10),
-                    const Text('Select Members'),
+                    const Text('Select Technical Members'), // Updated label
                     GestureDetector(
                       onTap: () async {
                         final selected = await showDialog<List<int>>(
@@ -233,15 +286,18 @@ class _AdminUpdateTaskScreenState extends State<AdminUpdateTaskScreen> {
                           builder: (context) {
                             final tempSelected =
                                 List<int>.from(_selectedMemberIds);
+                            // Filter users to show only Technical members
                             final filteredUsers = _users.where((user) {
                               final role =
                                   (user['role'] ?? '').toString().toLowerCase();
-                              return role == 'technical' || role == 'sales';
+                              return role ==
+                                  'technical'; // Only show Technical members
                             }).toList();
                             return StatefulBuilder(
                               builder: (context, setStateDialog) {
                                 return AlertDialog(
-                                  title: const Text('Select Members'),
+                                  title: const Text(
+                                      'Select Technical Members'), // Updated title
                                   content: SizedBox(
                                     width: double.maxFinite,
                                     child: ListView(
@@ -299,19 +355,15 @@ class _AdminUpdateTaskScreenState extends State<AdminUpdateTaskScreen> {
                         ),
                         child: Text(
                           _selectedMemberIds.isEmpty
-                              ? 'Tap to select members'
+                              ? 'Tap to select Technical members' // Updated placeholder
                               : _users
                                   .where((u) =>
                                       _selectedMemberIds
                                           .contains(u['member_id']) &&
-                                      ((u['role'] ?? '')
-                                                  .toString()
-                                                  .toLowerCase() ==
-                                              'technician' ||
-                                          (u['role'] ?? '')
-                                                  .toString()
-                                                  .toLowerCase() ==
-                                              'sales'))
+                                      (u['role'] ?? '')
+                                              .toString()
+                                              .toLowerCase() ==
+                                          'technical') // Only show Technical members
                                   .map((u) =>
                                       '${u['first_name']} ${u['last_name']}')
                                   .join(', '),
@@ -322,6 +374,7 @@ class _AdminUpdateTaskScreenState extends State<AdminUpdateTaskScreen> {
                     const SizedBox(height: 10),
                     const Text('Select Project'),
                     DropdownButtonFormField<int>(
+                      onChanged: null,
                       value: _selectedProjectId,
                       items: _projects
                           .map((proj) => DropdownMenuItem<int>(
@@ -332,8 +385,6 @@ class _AdminUpdateTaskScreenState extends State<AdminUpdateTaskScreen> {
                                 child: Text(proj['title'] ?? ''),
                               ))
                           .toList(),
-                      onChanged: (val) =>
-                          setState(() => _selectedProjectId = val),
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: Colors.white,
@@ -345,28 +396,49 @@ class _AdminUpdateTaskScreenState extends State<AdminUpdateTaskScreen> {
                       ),
                       validator: (val) => val == null ? 'Required' : null,
                     ),
-                    const SizedBox(height: 10),
-                    const Text('Supervisor'),
-                    DropdownButtonFormField<int>(
-                      value: _selectedSupervisorId,
-                      items: _supervisors
-                          .map((sup) => DropdownMenuItem<int>(
-                                value: sup['member_id'],
-                                child: Text(
-                                    '${sup['first_name']} ${sup['last_name']}'),
-                              ))
-                          .toList(),
-                      onChanged: null, // disables the dropdown
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.grey[200],
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none),
-                        contentPadding: const EdgeInsets.symmetric(
-                            vertical: 14, horizontal: 16),
-                      ),
-                      disabledHint: Text(_supervisorName),
+                    const SizedBox(height: 12),
+                    // Supervisor field (converted from dropdown to text field)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Supervisor'),
+                        const SizedBox(height: 8),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 14, horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            border: Border.all(color: Colors.grey[400]!),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: _isLoadingSupervisor
+                              ? const Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                    SizedBox(width: 12),
+                                    Text('Loading supervisor...'),
+                                  ],
+                                )
+                              : Text(
+                                  _supervisorName ?? 'Supervisor not assigned',
+                                  style: TextStyle(
+                                    color: (_supervisorName == null ||
+                                            _supervisorName ==
+                                                'Supervisor not assigned')
+                                        ? Colors.grey[600]
+                                        : Colors.black87,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 12),
                     const Text('Select Status'),

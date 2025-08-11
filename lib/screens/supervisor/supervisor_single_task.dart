@@ -95,16 +95,12 @@ class _SupervisorSingleTaskState extends State<SupervisorSingleTask> {
       appBar: AppBar(
         title: const Text('Single Task',
             style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: kPrimaryColor,
-        foregroundColor: kWhite,
-        elevation: 1,
-        iconTheme: const IconThemeData(color: kWhite),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.list),
-            onPressed: () {},
-          ),
-        ],
+        toolbarHeight: 70,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        centerTitle: true,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -124,7 +120,7 @@ class _SupervisorSingleTaskState extends State<SupervisorSingleTask> {
                           children: [
                             Container(
                               decoration: const BoxDecoration(
-                                color: cardGreen,
+                                color: kWhite,
                                 borderRadius: BorderRadius.only(
                                   topLeft: Radius.circular(16),
                                   topRight: Radius.circular(16),
@@ -138,7 +134,7 @@ class _SupervisorSingleTaskState extends State<SupervisorSingleTask> {
                                     : 'Project',
                                 style: const TextStyle(
                                     fontSize: 20,
-                                    color: Colors.white,
+                                    color: primaryColor,
                                     fontWeight: FontWeight.bold),
                               ),
                             ),
@@ -164,20 +160,22 @@ class _SupervisorSingleTaskState extends State<SupervisorSingleTask> {
                                   const Divider(thickness: 1),
                                   _infoRow('Status', task!['status'] ?? ''),
                                   const SizedBox(
-                                    height: 20,
-                                  ),
-                                  CustomButton(
-                                    text: "Request Status Update",
-                                    width: double.infinity,
-                                    backgroundColor: kPrimaryColor,
-                                    onPressed: () =>
-                                        _showStatusRequestDialog(context),
+                                    height: 10,
                                   ),
                                 ],
                               ),
                             ),
                           ],
                         ),
+                      ),
+                      const SizedBox(
+                        height: 15,
+                      ),
+                      CustomButton(
+                        text: "Request Status Update",
+                        width: double.infinity,
+                        backgroundColor: kPrimaryColor,
+                        onPressed: () => _showStatusRequestDialog(context),
                       ),
                     ],
                   ),

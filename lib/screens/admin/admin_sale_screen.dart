@@ -6,6 +6,7 @@ import 'package:exfactor/utils/colors.dart';
 import 'package:exfactor/widgets/common/custom_button.dart';
 import 'package:exfactor/services/userService.dart';
 import 'package:exfactor/services/saleService.dart';
+import 'package:exfactor/utils/constants.dart';
 
 class AdminSaleScreen extends StatefulWidget {
   const AdminSaleScreen({super.key});
@@ -56,9 +57,9 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
     }
   }
 
-  // Format currency values
+  // Format currency values - using constants.dart utility
   String _formatCurrency(double amount) {
-    return 'LKR ${amount.toStringAsFixed(2)}';
+    return formatCurrency(amount);
   }
 
   @override
@@ -246,7 +247,7 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      "${percentage.toStringAsFixed(1)}%",
+                      "${formatWithCommas(percentage, decimals: 1)}%",
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,

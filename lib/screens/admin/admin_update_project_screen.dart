@@ -24,12 +24,12 @@ class _AdminUpdateProjectScreenState extends State<AdminUpdateProjectScreen> {
   final _emailController = TextEditingController();
   final _mobileController = TextEditingController();
   String? _selectedCountry;
-  int? _selectedSupervisor;
+  int? _selectedSupervisorOrAdmin;
   DateTime? _commencementDate;
   DateTime? _deliveryDate;
   String? _selectedStatus;
   bool _isLoading = false;
-  List<Map<String, dynamic>> _supervisors = [];
+  List<Map<String, dynamic>> _supervisorsAndAdmins = [];
   ProjectModel? _project;
 
   static const List<String> _countries = [
@@ -230,7 +230,7 @@ class _AdminUpdateProjectScreenState extends State<AdminUpdateProjectScreen> {
   ];
   static const List<String> _statusOptions = [
     'Pending',
-    'In Progress',
+    'On Progress',
     'Completed',
     'Archived',
   ];
@@ -238,18 +238,20 @@ class _AdminUpdateProjectScreenState extends State<AdminUpdateProjectScreen> {
   @override
   void initState() {
     super.initState();
-    _loadSupervisors();
+    _loadSupervisorsAndAdmins();
     _loadProject();
   }
 
-  Future<void> _loadSupervisors() async {
+  Future<void> _loadSupervisorsAndAdmins() async {
     try {
-      final supervisors = await SupabaseService.getSupervisors();
+      final supervisorsAndAdmins =
+          await SupabaseService.getSupervisorsAndAdmins();
       setState(() {
-        _supervisors = supervisors;
+        _supervisorsAndAdmins = supervisorsAndAdmins;
       });
     } catch (e) {
-      _showToast('Error loading supervisors:  [31m${e.toString()} [0m');
+      _showToast(
+          'Error loading supervisors and admins:  [31m${e.toString()} [0m');
     }
   }
 
@@ -273,7 +275,7 @@ class _AdminUpdateProjectScreenState extends State<AdminUpdateProjectScreen> {
       _emailController.text = _project!.contactPersonEmail;
       _mobileController.text = _project!.contactPersonPhone;
       _selectedCountry = _project!.clientCountry;
-      _selectedSupervisor = _project!.supervisorId;
+      _selectedSupervisorOrAdmin = _project!.supervisorId;
       _commencementDate = DateTime.tryParse(_project!.projectStartDate);
       _deliveryDate = DateTime.tryParse(_project!.projectEndDate);
       // Map status to dropdown value (case-insensitive)
@@ -297,8 +299,8 @@ class _AdminUpdateProjectScreenState extends State<AdminUpdateProjectScreen> {
       _showToast('Please select both commencement and delivery dates.');
       return;
     }
-    if (_selectedSupervisor == null) {
-      _showToast('Please select a supervisor.');
+    if (_selectedSupervisorOrAdmin == null) {
+      _showToast('Please select a project manager.');
       return;
     }
     if (_selectedStatus == null) {
@@ -318,7 +320,7 @@ class _AdminUpdateProjectScreenState extends State<AdminUpdateProjectScreen> {
         clientCountry: _selectedCountry ?? '',
         projectStartDate: _commencementDate!.toIso8601String(),
         projectEndDate: _deliveryDate!.toIso8601String(),
-        supervisorId: _selectedSupervisor!,
+        supervisorId: _selectedSupervisorOrAdmin!,
         projectStatus: _selectedStatus!,
       );
       await SupabaseService.updateProject(updatedProject);
@@ -432,31 +434,31 @@ class _AdminUpdateProjectScreenState extends State<AdminUpdateProjectScreen> {
                       children: [
                         Expanded(
                           child: _buildDropdown(
-                              'Select Supervisor',
-                              _supervisors
+                              'Select Project Manager',
+                              _supervisorsAndAdmins
                                   .map((e) => {
                                         'id': e['member_id'],
                                         'name':
-                                            '${e['first_name']} ${e['last_name']}'
+                                            '${e['first_name']} ${e['last_name']} (${e['role']})'
                                       })
                                   .toList(),
-                              _selectedSupervisor,
-                              (val) =>
-                                  setState(() => _selectedSupervisor = val)),
+                              _selectedSupervisorOrAdmin,
+                              (val) => setState(
+                                  () => _selectedSupervisorOrAdmin = val)),
                         ),
                         const SizedBox(width: 8),
                         IconButton(
-                          onPressed: _loadSupervisors,
+                          onPressed: _loadSupervisorsAndAdmins,
                           icon: const Icon(Icons.refresh),
-                          tooltip: 'Refresh Supervisors',
+                          tooltip: 'Refresh Project Managers',
                         ),
                       ],
                     ),
-                    if (_supervisors.isEmpty)
+                    if (_supervisorsAndAdmins.isEmpty)
                       const Padding(
                         padding: EdgeInsets.only(top: 8.0),
                         child: Text(
-                          'No supervisors found. Please add supervisors first.',
+                          'No project managers found. Please add supervisors or admins first.',
                           style: TextStyle(color: Colors.orange, fontSize: 12),
                         ),
                       ),

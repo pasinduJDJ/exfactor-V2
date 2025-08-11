@@ -11,9 +11,9 @@ class ProjectService {
       for (final project in allProjects) {
         final status = (project['status'] ?? '').toString().toLowerCase();
         print('Project: ${project['title']} - Status: $status');
-        if (status == 'on progress' ||
-            status == 'progress' ||
-            status == 'in progress') {
+        if (status == 'On Progress' ||
+            status == 'Progress' ||
+            status == 'In Progress') {
           liveProjectsCount++;
           print('✅ Counted as live project: ${project['title']}');
         }
@@ -57,7 +57,7 @@ class ProjectService {
       for (final project in allProjects) {
         final status = (project['status'] ?? '').toString().toLowerCase();
 
-        if (status == 'on progress' ||
+        if (status == 'On Progress' ||
             status == 'progress' ||
             status == 'in progress') {
           liveProjects++;
@@ -70,18 +70,44 @@ class ProjectService {
 
       return {
         'total': totalProjects,
-        'live': liveProjects,
-        'completed': completedProjects,
-        'pending': pendingProjects,
+        'On Progress': liveProjects,
+        'Completed': completedProjects,
+        'Pending': pendingProjects,
       };
     } catch (e) {
       print('Error getting project statistics: $e');
       return {
         'total': 0,
-        'live': 0,
-        'completed': 0,
-        'pending': 0,
+        'On Progress': 0,
+        'Completed': 0,
+        'Pending': 0,
       };
+    }
+  }
+
+  // Get project by ID with supervisor information
+  static Future<Map<String, dynamic>?> getProjectById(int projectId) async {
+    try {
+      final allProjects = await SupabaseService.getAllProjects();
+
+      final project = allProjects.firstWhere(
+        (p) =>
+            p['project_id'] != null &&
+            p['project_id'].toString() == projectId.toString(),
+        orElse: () => {},
+      );
+
+      if (project.isNotEmpty) {
+        print(
+            'Project found: ${project['title']} - Supervisor ID: ${project['supervisor_id']}');
+        return project;
+      } else {
+        print('Project not found with ID: $projectId');
+        return null;
+      }
+    } catch (e) {
+      print('Error getting project by ID: $e');
+      return null;
     }
   }
 }

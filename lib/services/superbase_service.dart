@@ -24,10 +24,28 @@ class SupabaseService {
   static Future<List<Map<String, dynamic>>> getProjects() async {
     final response = await _client
         .from('project')
-        .select('project_id, title')
-        .eq('status', 'pending'); // Only get active/pending projects
+        .select('project_id, title, status')
+        .or('status.eq.pending,status.eq.On Progress,status.eq.on progress,status.eq.progress,status.eq.in progress'); // Get projects suitable for task assignment
 
     return List<Map<String, dynamic>>.from(response);
+  }
+
+  // GET PROJECTS FOR TASK ASSIGNMENT (more comprehensive)
+  static Future<List<Map<String, dynamic>>>
+      getProjectsForTaskAssignment() async {
+    try {
+      final response = await _client
+          .from('project')
+          .select('project_id, title, status')
+          .or('status.eq.pending,status.eq.On Progress,status.eq.on progress,status.eq.progress,status.eq.in progress')
+          .order('title'); // Order by title for better UX
+
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Error fetching projects for task assignment: $e');
+      throw Exception(
+          'Failed to fetch projects for task assignment: ${e.toString()}');
+    }
   }
 
   // GET ALL PROJECTS
@@ -69,6 +87,16 @@ class SupabaseService {
         .from('user')
         .select('member_id, first_name, last_name')
         .eq('role', 'Supervisor');
+
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  // GET SUPERVISORS AND ADMINS (users with supervisor or admin role)
+  static Future<List<Map<String, dynamic>>> getSupervisorsAndAdmins() async {
+    final response = await _client
+        .from('user')
+        .select('member_id, first_name, last_name, role')
+        .or('role.eq.Supervisor,role.eq.Admin');
 
     return List<Map<String, dynamic>>.from(response);
   }

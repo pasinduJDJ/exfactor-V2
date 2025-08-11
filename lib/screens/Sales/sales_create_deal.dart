@@ -215,7 +215,7 @@ class _CreateDealState extends State<CreateDeal> {
               _buildTextField('Email', _emailController,
                   keyboardType: TextInputType.emailAddress),
               _buildTextField('Website', _websiteController),
-              _buildTextField('Current Solution', _currentSolutionController),
+              _buildTextField('Legacy System', _currentSolutionController),
 
               // Auto-generated fields (read-only)
               const SizedBox(height: 16),

@@ -75,76 +75,80 @@ class _SupervisorTaskScreenState extends State<SupervisorTaskScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 20),
-          CustomButton(
-            text: "Assign New Tasks",
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => AdminAddTaskScreen()),
-              );
-            },
-            width: double.infinity,
-            backgroundColor: kPrimaryColor,
-            icon: const Icon(Icons.task),
-          ),
-          const SizedBox(height: 30),
-          const Text(
-            "Status Update Request",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 20),
-          _loading
-              ? const CircularProgressIndicator()
-              : _pendingRequests.isEmpty
-                  ? const Text('No pending status requests.')
-                  : ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: _pendingRequests.length,
-                      itemBuilder: (context, index) {
-                        final req = _pendingRequests[index];
-                        return FutureBuilder<List<String>>(
-                          future: Future.wait([
-                            _getTaskTitle(req['task_id']),
-                            _getTechnicianName(req['technician_id']),
-                          ]),
-                          builder: (context, snapshot) {
-                            if (!snapshot.hasData) {
-                              return const ListTile(title: Text('Loading...'));
-                            }
-                            final taskTitle = snapshot.data![0];
-                            final techName = snapshot.data![1];
-                            return Card(
-                              margin: const EdgeInsets.symmetric(vertical: 8),
-                              child: ListTile(
-                                title: Text('Task: $taskTitle'),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Technician: $techName'),
-                                    Text(
-                                        'Requested Status: ${req['requested_status']}'),
-                                  ],
+    return Scaffold(
+      backgroundColor: backgroundColor,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CustomButton(
+              text: "Assign New Tasks",
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AdminAddTaskScreen()),
+                );
+              },
+              width: double.infinity,
+              backgroundColor: kPrimaryColor,
+              icon: const Icon(Icons.task),
+            ),
+            const SizedBox(height: 30),
+            const Text(
+              "Status Update Request",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 15),
+            _loading
+                ? const CircularProgressIndicator()
+                : _pendingRequests.isEmpty
+                    ? const Text('No pending status requests.')
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _pendingRequests.length,
+                        itemBuilder: (context, index) {
+                          final req = _pendingRequests[index];
+                          return FutureBuilder<List<String>>(
+                            future: Future.wait([
+                              _getTaskTitle(req['task_id']),
+                              _getTechnicianName(req['technician_id']),
+                            ]),
+                            builder: (context, snapshot) {
+                              if (!snapshot.hasData) {
+                                return const ListTile(
+                                    title: Text('Loading...'));
+                              }
+                              final taskTitle = snapshot.data![0];
+                              final techName = snapshot.data![1];
+                              return Card(
+                                margin: const EdgeInsets.symmetric(vertical: 8),
+                                child: ListTile(
+                                  title: Text('Task: $taskTitle'),
+                                  subtitle: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text('Technician: $techName'),
+                                      Text(
+                                          'Requested Status: ${req['requested_status']}'),
+                                    ],
+                                  ),
+                                  trailing: ElevatedButton(
+                                    onPressed: () =>
+                                        _approveRequest(req['request_id']),
+                                    child: const Text('Approve'),
+                                  ),
                                 ),
-                                trailing: ElevatedButton(
-                                  onPressed: () =>
-                                      _approveRequest(req['request_id']),
-                                  child: const Text('Approve'),
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
-        ],
+                              );
+                            },
+                          );
+                        },
+                      ),
+          ],
+        ),
       ),
     );
   }

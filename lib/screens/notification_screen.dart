@@ -67,27 +67,28 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: KbgColor,
-      padding: const EdgeInsets.all(AppConstants.defaultPadding),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 10),
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : notifications.isEmpty
-                  ? const Center(
-                      child: Text(
-                        'Notification Bucket Clear',
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
+    return Scaffold(
+      backgroundColor: backgroundColor,
+      body: Container(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : notifications.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'Notification Bucket Clear',
+                          style: TextStyle(fontSize: 16, color: Colors.grey),
+                        ),
+                      )
+                    : TechnicalNotificationCard.buildNotificationCards(
+                        notifications,
+                        onDelete: _handleDeleteNotification,
                       ),
-                    )
-                  : TechnicalNotificationCard.buildNotificationCards(
-                      notifications,
-                      onDelete: _handleDeleteNotification,
-                    ),
-        ],
+          ],
+        ),
       ),
     );
   }

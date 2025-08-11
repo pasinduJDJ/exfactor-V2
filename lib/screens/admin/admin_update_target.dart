@@ -5,6 +5,43 @@ import 'package:exfactor/widgets/common/custom_button.dart';
 import 'package:exfactor/services/saleService.dart';
 import 'package:exfactor/services/superbase_service.dart';
 import 'package:exfactor/utils/constants.dart';
+import 'package:intl/intl.dart';
+
+// Custom formatter for thousands separator
+class ThousandsFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.isEmpty) {
+      return newValue;
+    }
+
+    // Remove all non-digits and decimal points
+    String text = newValue.text.replaceAll(RegExp(r'[^0-9.]'), '');
+
+    // Ensure only one decimal point
+    List<String> parts = text.split('.');
+    if (parts.length > 2) {
+      text = '${parts[0]}.${parts.sublist(1).join('')}';
+      parts = text.split('.');
+    }
+
+    // Format the integer part with commas
+    if (parts.isNotEmpty && parts[0].isNotEmpty) {
+      final formatter = NumberFormat('#,##0');
+      parts[0] = formatter.format(int.tryParse(parts[0]) ?? 0);
+    }
+
+    String formattedText = parts.join('.');
+
+    return TextEditingValue(
+      text: formattedText,
+      selection: TextSelection.collapsed(offset: formattedText.length),
+    );
+  }
+}
 
 class AdminUpdateTarget extends StatefulWidget {
   const AdminUpdateTarget({super.key});
@@ -80,11 +117,17 @@ class _AdminUpdateTargetState extends State<AdminUpdateTarget> {
     }
   }
 
+  // Helper method to parse formatted number (remove commas)
+  double _parseFormattedNumber(String text) {
+    if (text.isEmpty) return 0;
+    return double.tryParse(text.replaceAll(',', '')) ?? 0;
+  }
+
   double _getTotalMemberTarget() {
     double total = 0;
     for (var controller in memberControllers.values) {
       if (controller.text.isNotEmpty) {
-        total += double.tryParse(controller.text) ?? 0;
+        total += _parseFormattedNumber(controller.text);
       }
     }
     return total;
@@ -93,7 +136,7 @@ class _AdminUpdateTargetState extends State<AdminUpdateTarget> {
   bool _validateForm() {
     if (!_formKey.currentState!.validate()) return false;
 
-    final revenueTarget = double.tryParse(_revenueController.text) ?? 0;
+    final revenueTarget = _parseFormattedNumber(_revenueController.text);
     final totalMemberTarget = _getTotalMemberTarget();
 
     if (!SaleService.validateTargetAssignment(
@@ -116,7 +159,7 @@ class _AdminUpdateTargetState extends State<AdminUpdateTarget> {
     setState(() => isSubmitting = true);
 
     try {
-      final revenueTarget = double.parse(_revenueController.text);
+      final revenueTarget = _parseFormattedNumber(_revenueController.text);
 
       // Prepare member assignments
       Map<String, double> memberAssignments = {};
@@ -125,7 +168,7 @@ class _AdminUpdateTargetState extends State<AdminUpdateTarget> {
         final controller = memberControllers[member['member_id']];
 
         if (controller != null && controller.text.isNotEmpty) {
-          memberAssignments[memberId] = double.parse(controller.text);
+          memberAssignments[memberId] = _parseFormattedNumber(controller.text);
         }
       }
 
@@ -280,8 +323,6 @@ class _AdminUpdateTargetState extends State<AdminUpdateTarget> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 20),
-
                     // Target Selection
                     const Text(
                       "Select Target to Update",
@@ -338,8 +379,7 @@ class _AdminUpdateTargetState extends State<AdminUpdateTarget> {
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                            RegExp(r'^\d*\.?\d*')),
+                        ThousandsFormatter(),
                       ],
                       decoration: InputDecoration(
                         hintText: "Enter target revenue",
@@ -351,7 +391,8 @@ class _AdminUpdateTargetState extends State<AdminUpdateTarget> {
                         if (value == null || value.isEmpty) {
                           return 'Please enter target revenue';
                         }
-                        final amount = double.tryParse(value);
+                        final amount =
+                            double.tryParse(value.replaceAll(',', ''));
                         if (amount == null || amount <= 0) {
                           return 'Please enter a valid amount';
                         }
@@ -426,7 +467,7 @@ class _AdminUpdateTargetState extends State<AdminUpdateTarget> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${member['first_name'] ?? ''} ${member['last_name'] ?? ''}',
+                  '${member['first_name'] ?? ''}',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -455,7 +496,7 @@ class _AdminUpdateTargetState extends State<AdminUpdateTarget> {
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                ThousandsFormatter(),
               ],
               decoration: InputDecoration(
                 hintText: "Amount",
@@ -470,7 +511,7 @@ class _AdminUpdateTargetState extends State<AdminUpdateTarget> {
               ),
               validator: (value) {
                 if (value != null && value.isNotEmpty) {
-                  final amount = double.tryParse(value);
+                  final amount = double.tryParse(value.replaceAll(',', ''));
                   if (amount == null || amount < 0) {
                     return 'Invalid amount';
                   }

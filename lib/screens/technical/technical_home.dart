@@ -136,127 +136,130 @@ class _TechnicalHomeState extends State<TechnicalHome> {
   @override
   Widget build(BuildContext context) {
     List<Map<String, dynamic>> statusItems = [
-      {'label': 'PENDING', 'count': pendingCount, 'color': cardYellow},
-      {'label': 'WORKING', 'count': progressCount, 'color': cardGreen},
-      {'label': 'COMPLETE', 'count': completeCount, 'color': cardLightBlue},
+      {'label': 'PENDING', 'count': pendingCount, 'color': kWhite},
+      {'label': 'In Progress', 'count': progressCount, 'color': kWhite},
+      {'label': 'COMPLETE', 'count': completeCount, 'color': kWhite},
       {'label': 'OVER DUE', 'count': overdueCount, 'color': cardRed},
     ];
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: Column(children: [
-        SizedBox(height: 20),
-        isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : UserUtils.buildStatusSummaryCard(
-                statusItems,
-                onTap: (index) {
-                  String categoryTitle = statusItems[index]['label'];
-                  List<Map<String, dynamic>> taskList;
-                  if (index == 0) {
-                    taskList = pendingTasks;
-                  } else if (index == 1) {
-                    taskList = inProgressTasks;
-                  } else if (index == 2) {
-                    taskList = completeTasks;
-                  } else {
-                    taskList = overdueTasks;
-                  }
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => UserTaskScreen(
-                        categoryTitle: categoryTitle,
-                        taskList: taskList,
+    return Scaffold(
+      backgroundColor: backgroundColor,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: Column(children: [
+          SizedBox(height: 15),
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : UserUtils.buildStatusSummaryCard(
+                  statusItems,
+                  onTap: (index) {
+                    String categoryTitle = statusItems[index]['label'];
+                    List<Map<String, dynamic>> taskList;
+                    if (index == 0) {
+                      taskList = pendingTasks;
+                    } else if (index == 1) {
+                      taskList = inProgressTasks;
+                    } else if (index == 2) {
+                      taskList = completeTasks;
+                    } else {
+                      taskList = overdueTasks;
+                    }
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => UserTaskScreen(
+                          categoryTitle: categoryTitle,
+                          taskList: taskList,
+                        ),
                       ),
-                    ),
-                  );
-                },
-              ),
-        const SizedBox(height: 30),
-        UserUtils.buildExpandableGroup(
-          title: 'In Progress Task',
-          color: cardGreen,
-          expanded: showInProgress,
-          onToggle: () {
-            setState(() {
-              showInProgress = !showInProgress;
-            });
-          },
-          groupList: inProgressTasks,
-          onSeeMore: (task) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => TechnicalSingleTask(
-                    taskId: task['task_id']?.toString() ?? ''),
-              ),
-            );
-          },
-        ),
-        SizedBox(height: 20),
-        UserUtils.buildExpandableGroup(
-          title: 'Pending Task',
-          color: cardDarkYellow,
-          expanded: showPending,
-          onToggle: () {
-            setState(() {
-              showPending = !showPending;
-            });
-          },
-          groupList: pendingTasks,
-          onSeeMore: (task) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => TechnicalSingleTask(
-                    taskId: task['task_id']?.toString() ?? ''),
-              ),
-            );
-          },
-        ),
-        SizedBox(height: 20),
-        UserUtils.buildExpandableGroup(
-          title: 'Over Due Task',
-          color: cardDarkRed,
-          expanded: showOverdue,
-          onToggle: () {
-            setState(() {
-              showOverdue = !showOverdue;
-            });
-          },
-          groupList: overdueTasks,
-          onSeeMore: (task) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => TechnicalSingleTask(
-                    taskId: task['task_id']?.toString() ?? ''),
-              ),
-            );
-          },
-        ),
-        SizedBox(height: 20),
-        UserUtils.buildExpandableGroup(
-          title: 'Complete Task',
-          color: cardLightBlue,
-          expanded: showComplete,
-          onToggle: () {
-            setState(() {
-              showComplete = !showComplete;
-            });
-          },
-          groupList: completeTasks,
-          onSeeMore: (task) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => TechnicalSingleTask(
-                    taskId: task['task_id']?.toString() ?? ''),
-              ),
-            );
-          },
-        ),
-      ]),
+                    );
+                  },
+                ),
+          const SizedBox(height: 15),
+          UserUtils.buildExpandableGroup(
+            title: 'In Progress Task',
+            color: cardGreen,
+            expanded: showInProgress,
+            onToggle: () {
+              setState(() {
+                showInProgress = !showInProgress;
+              });
+            },
+            groupList: inProgressTasks,
+            onSeeMore: (task) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => TechnicalSingleTask(
+                      taskId: task['task_id']?.toString() ?? ''),
+                ),
+              );
+            },
+          ),
+          SizedBox(height: 15),
+          UserUtils.buildExpandableGroup(
+            title: 'Pending Task',
+            color: cardDarkYellow,
+            expanded: showPending,
+            onToggle: () {
+              setState(() {
+                showPending = !showPending;
+              });
+            },
+            groupList: pendingTasks,
+            onSeeMore: (task) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => TechnicalSingleTask(
+                      taskId: task['task_id']?.toString() ?? ''),
+                ),
+              );
+            },
+          ),
+          SizedBox(height: 15),
+          UserUtils.buildExpandableGroup(
+            title: 'Over Due Task',
+            color: cardDarkRed,
+            expanded: showOverdue,
+            onToggle: () {
+              setState(() {
+                showOverdue = !showOverdue;
+              });
+            },
+            groupList: overdueTasks,
+            onSeeMore: (task) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => TechnicalSingleTask(
+                      taskId: task['task_id']?.toString() ?? ''),
+                ),
+              );
+            },
+          ),
+          SizedBox(height: 15),
+          UserUtils.buildExpandableGroup(
+            title: 'Complete Task',
+            color: cardLightBlue,
+            expanded: showComplete,
+            onToggle: () {
+              setState(() {
+                showComplete = !showComplete;
+              });
+            },
+            groupList: completeTasks,
+            onSeeMore: (task) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => TechnicalSingleTask(
+                      taskId: task['task_id']?.toString() ?? ''),
+                ),
+              );
+            },
+          ),
+        ]),
+      ),
     );
   }
 }

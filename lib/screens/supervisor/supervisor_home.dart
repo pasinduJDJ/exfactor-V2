@@ -16,7 +16,7 @@ class SupervisorHome extends StatefulWidget {
 
 class _SupervisorHomeState extends State<SupervisorHome> {
   bool showPending = false;
-  bool showProgress = true;
+  bool showProgress = false;
   bool showOverdue = false;
   bool showComplete = false;
 
@@ -136,16 +136,17 @@ class _SupervisorHomeState extends State<SupervisorHome> {
   @override
   Widget build(BuildContext context) {
     List<Map<String, dynamic>> statusItems = [
-      {'label': 'PENDING', 'count': pendingCount, 'color': cardYellow},
-      {'label': 'WORKING', 'count': progressCount, 'color': cardGreen},
-      {'label': 'COMPLETE', 'count': completeCount, 'color': cardLightBlue},
+      {'label': 'PENDING', 'count': pendingCount, 'color': kWhite},
+      {'label': 'WORKING', 'count': progressCount, 'color': kWhite},
+      {'label': 'COMPLETE', 'count': completeCount, 'color': kWhite},
       {'label': 'OVER DUE', 'count': overdueCount, 'color': cardRed},
     ];
     return Scaffold(
+      backgroundColor: backgroundColor,
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 10),
         child: Column(children: [
-          SizedBox(height: 20),
+          SizedBox(height: 10),
           isLoading
               ? const Center(child: CircularProgressIndicator())
               : UserUtils.buildStatusSummaryCard(
@@ -173,7 +174,7 @@ class _SupervisorHomeState extends State<SupervisorHome> {
                     );
                   },
                 ),
-          const SizedBox(height: 30),
+          const SizedBox(height: 15),
           UserUtils.buildExpandableGroup(
             title: 'In Progress Task',
             color: cardGreen,
@@ -194,7 +195,7 @@ class _SupervisorHomeState extends State<SupervisorHome> {
               );
             },
           ),
-          SizedBox(height: 20),
+          SizedBox(height: 15),
           UserUtils.buildExpandableGroup(
             title: 'Pending Task',
             color: cardDarkYellow,
@@ -215,7 +216,7 @@ class _SupervisorHomeState extends State<SupervisorHome> {
               );
             },
           ),
-          SizedBox(height: 20),
+          SizedBox(height: 15),
           UserUtils.buildExpandableGroup(
             title: 'Over Due Task',
             color: cardDarkRed,
@@ -236,7 +237,7 @@ class _SupervisorHomeState extends State<SupervisorHome> {
               );
             },
           ),
-          SizedBox(height: 20),
+          SizedBox(height: 15),
           UserUtils.buildExpandableGroup(
             title: 'Complete Task',
             color: cardLightBlue,

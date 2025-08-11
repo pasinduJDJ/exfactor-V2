@@ -21,11 +21,11 @@ class _AdminAddProjectScreenState extends State<AdminAddProjectScreen> {
   final _emailController = TextEditingController();
   final _mobileController = TextEditingController();
   String? _selectedCountry;
-  int? _selectedSupervisor;
+  int? _selectedSupervisorOrAdmin;
   DateTime? _commencementDate;
   DateTime? _deliveryDate;
   bool _isLoading = false;
-  List<Map<String, dynamic>> _supervisors = [];
+  List<Map<String, dynamic>> _supervisorsAndAdmins = [];
 
   // List of all countries
   static const List<String> _countries = [
@@ -228,18 +228,19 @@ class _AdminAddProjectScreenState extends State<AdminAddProjectScreen> {
   @override
   void initState() {
     super.initState();
-    _loadSupervisors();
+    _loadSupervisorsAndAdmins();
   }
 
-  // Load supervisors from database
-  Future<void> _loadSupervisors() async {
+  // Load supervisors and admins from database
+  Future<void> _loadSupervisorsAndAdmins() async {
     try {
-      final supervisors = await SupabaseService.getSupervisors();
+      final supervisorsAndAdmins =
+          await SupabaseService.getSupervisorsAndAdmins();
       setState(() {
-        _supervisors = supervisors;
+        _supervisorsAndAdmins = supervisorsAndAdmins;
       });
     } catch (e) {
-      _showToast('Error loading supervisors: ${e.toString()}');
+      _showToast('Error loading supervisors and admins: ${e.toString()}');
     }
   }
 
@@ -253,8 +254,8 @@ class _AdminAddProjectScreenState extends State<AdminAddProjectScreen> {
       _showToast('Please select both commencement and delivery dates.');
       return;
     }
-    if (_selectedSupervisor == null) {
-      _showToast('Please select a supervisor.');
+    if (_selectedSupervisorOrAdmin == null) {
+      _showToast('Please select a project manager.');
       return;
     }
 
@@ -270,7 +271,7 @@ class _AdminAddProjectScreenState extends State<AdminAddProjectScreen> {
         clientCountry: _selectedCountry ?? '',
         projectStartDate: _commencementDate!.toIso8601String(),
         projectEndDate: _deliveryDate!.toIso8601String(),
-        supervisorId: _selectedSupervisor!,
+        supervisorId: _selectedSupervisorOrAdmin!, // Can be supervisor or admin
         projectStatus: 'pending',
       );
 
@@ -378,29 +379,31 @@ class _AdminAddProjectScreenState extends State<AdminAddProjectScreen> {
                 children: [
                   Expanded(
                     child: _buildDropdown(
-                        'Select Supervisor',
-                        _supervisors
+                        'Select Project Manager',
+                        _supervisorsAndAdmins
                             .map((e) => {
                                   'id': e['member_id'],
-                                  'name': '${e['first_name']} ${e['last_name']}'
+                                  'name':
+                                      '${e['first_name']} ${e['last_name']} (${e['role']})'
                                 })
                             .toList(),
-                        _selectedSupervisor,
-                        (val) => setState(() => _selectedSupervisor = val)),
+                        _selectedSupervisorOrAdmin,
+                        (val) =>
+                            setState(() => _selectedSupervisorOrAdmin = val)),
                   ),
                   const SizedBox(width: 8),
                   IconButton(
-                    onPressed: _loadSupervisors,
+                    onPressed: _loadSupervisorsAndAdmins,
                     icon: const Icon(Icons.refresh),
-                    tooltip: 'Refresh Supervisors',
+                    tooltip: 'Refresh Project Managers',
                   ),
                 ],
               ),
-              if (_supervisors.isEmpty)
+              if (_supervisorsAndAdmins.isEmpty)
                 const Padding(
                   padding: EdgeInsets.only(top: 8.0),
                   child: Text(
-                    'No supervisors found. Please add supervisors first.',
+                    'No project managers found. Please add supervisors or admins first.',
                     style: TextStyle(color: Colors.orange, fontSize: 12),
                   ),
                 ),

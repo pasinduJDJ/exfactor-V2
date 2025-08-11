@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:exfactor/utils/colors.dart';
 import 'package:exfactor/services/saleService.dart';
 import 'package:exfactor/screens/deal_deatils_screen.dart';
+import 'package:exfactor/utils/constants.dart';
 
 class MemberSalesTrack extends StatefulWidget {
   final String memberId;
@@ -83,9 +84,9 @@ class _MemberSalesTrackState extends State<MemberSalesTrack> {
     return SaleService.getAnnualTarget(memberAssignedTargets);
   }
 
-  // Format currency values
+  // Format currency values - using constants.dart utility
   String _formatCurrency(double amount) {
-    return 'LKR ${amount.toStringAsFixed(2)}';
+    return formatCurrency(amount);
   }
 
   @override
@@ -110,20 +111,19 @@ class _MemberSalesTrackState extends State<MemberSalesTrack> {
           : memberAssignedTargets == null
               ? _buildNoTargetsView()
               : SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
                   child: Column(
                     children: [
-                      const SizedBox(height: 30),
-
                       // Section 1: Progress Circles
                       _buildProgressCirclesSection(),
 
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 15),
 
                       // Section 2: Deal Cards
                       _buildDealCardsSection(),
 
-                      const SizedBox(height: 30),
+                      const SizedBox(height: 10),
                     ],
                   ),
                 ),
@@ -313,7 +313,7 @@ class _MemberSalesTrackState extends State<MemberSalesTrack> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    "${percentage.toStringAsFixed(1)}%",
+                    "${formatWithCommas(percentage, decimals: 1)}%",
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -580,7 +580,7 @@ class _DealListWidgetState extends State<_DealListWidget> {
                       ),
                       // Deal amount
                       Text(
-                        _formatCurrency((deal['deal_amount'] ?? 0).toDouble()),
+                        formatCurrency((deal['deal_amount'] ?? 0).toDouble()),
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
@@ -662,7 +662,7 @@ class _DealListWidgetState extends State<_DealListWidget> {
   }
 
   String _formatCurrency(double amount) {
-    return 'LKR ${amount.toStringAsFixed(2)}';
+    return formatCurrency(amount);
   }
 }
 
