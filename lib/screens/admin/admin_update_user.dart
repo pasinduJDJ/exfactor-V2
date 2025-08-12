@@ -42,7 +42,7 @@ class _AdminUpdateUserScreenState extends State<AdminUpdateUserScreen> {
 
   List<Map<String, dynamic>> _supervisors = [];
   int? _selectedSupervisorId;
-  final List<String> _roles = ['Admin', 'Supervisor', 'Technician'];
+  final List<String> _roles = ['Admin', 'Supervisor', 'Technical'];
   String? _selectedRole;
 
   int? _memberId;
@@ -256,6 +256,7 @@ class _AdminUpdateUserScreenState extends State<AdminUpdateUserScreen> {
               TextFormField(
                 controller: _firstNameController,
                 decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
                   contentPadding:
                       EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 ),
@@ -265,6 +266,7 @@ class _AdminUpdateUserScreenState extends State<AdminUpdateUserScreen> {
               TextFormField(
                 controller: _lastNameController,
                 decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
                   contentPadding:
                       EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 ),
@@ -274,6 +276,7 @@ class _AdminUpdateUserScreenState extends State<AdminUpdateUserScreen> {
               TextFormField(
                 controller: _emailController,
                 decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
                   contentPadding:
                       EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 ),
@@ -283,40 +286,213 @@ class _AdminUpdateUserScreenState extends State<AdminUpdateUserScreen> {
               TextFormField(
                 controller: _mobileController,
                 decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
                   contentPadding:
                       EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 ),
               ),
               const SizedBox(height: 15),
               const Text("Role"),
-              TextFormField(
-                controller: TextEditingController(text: _selectedRole ?? ''),
-                decoration: InputDecoration(
+              DropdownButtonFormField<String>(
+                value: _selectedRole,
+                items: _roles
+                    .map((role) => DropdownMenuItem(
+                          value: role,
+                          child: Text(role),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedRole = value;
+                  });
+                },
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
                   contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  filled: true,
-                  fillColor: Colors.grey[200],
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 ),
-                readOnly: true,
-                enabled: false,
+              ),
+              const SizedBox(height: 15),
+              const Text("Select Supervisor"),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<int>(
+                value: _selectedSupervisorId,
+                items: _supervisors
+                    .map((sup) => DropdownMenuItem<int>(
+                          value: sup['member_id'],
+                          child: Text(
+                              '${sup['first_name'] ?? ''} ${sup['last_name'] ?? ''}'),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedSupervisorId = value;
+                  });
+                },
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
               ),
               const SizedBox(height: 15),
               const Text("Enter Position"),
               TextFormField(
                 controller: _positionController,
                 decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
                   contentPadding:
                       EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 ),
               ),
               const SizedBox(height: 15),
+              const Text("Birthday"),
+              TextFormField(
+                controller: _birthdayController,
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.calendar_today),
+                    onPressed: () async {
+                      final date = await showDatePicker(
+                        context: context,
+                        initialDate: _selectedBirthday ?? DateTime.now(),
+                        firstDate: DateTime(1900),
+                        lastDate: DateTime.now(),
+                      );
+                      if (date != null) {
+                        setState(() {
+                          _selectedBirthday = date;
+                          _birthdayController.text =
+                              date.toIso8601String().split('T')[0];
+                        });
+                      }
+                    },
+                  ),
+                ),
+                readOnly: true,
+              ),
+              const SizedBox(height: 15),
+              const Text("Join Date"),
+              TextFormField(
+                controller: _joinDateController,
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.calendar_today),
+                    onPressed: () async {
+                      final date = await showDatePicker(
+                        context: context,
+                        initialDate: _selectedJoinDate ?? DateTime.now(),
+                        firstDate: DateTime(1900),
+                        lastDate: DateTime.now(),
+                      );
+                      if (date != null) {
+                        setState(() {
+                          _selectedJoinDate = date;
+                          _joinDateController.text =
+                              date.toIso8601String().split('T')[0];
+                        });
+                      }
+                    },
+                  ),
+                ),
+                readOnly: true,
+              ),
+              const SizedBox(height: 15),
+              const Text("Designation Date"),
+              TextFormField(
+                controller: _designationDateController,
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.calendar_today),
+                    onPressed: () async {
+                      final date = await showDatePicker(
+                        context: context,
+                        initialDate: _selectedDesignationDate ?? DateTime.now(),
+                        firstDate: DateTime(1900),
+                        lastDate: DateTime.now(),
+                      );
+                      if (date != null) {
+                        setState(() {
+                          _selectedDesignationDate = date;
+                          _designationDateController.text =
+                              date.toIso8601String().split('T')[0];
+                        });
+                      }
+                    },
+                  ),
+                ),
+                readOnly: true,
+              ),
+              const SizedBox(height: 15),
+              const Text("Emergency Contact Name"),
+              TextFormField(
+                controller: _emergencyNameController,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+              ),
+              const SizedBox(height: 15),
+              const Text("Emergency Contact Number"),
+              TextFormField(
+                controller: _emergencyMobileNumberController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+              ),
+              const SizedBox(height: 15),
+              const Text("Emergency Relationship"),
+              TextFormField(
+                controller: _emergencyRelationshipController,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+              ),
+              const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
+                height: 48,
                 child: ElevatedButton(
                   onPressed: _saving ? null : _handleSave,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
                   child: _saving
-                      ? const CircularProgressIndicator()
-                      : const Text('Submit'),
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text(
+                          'Update User',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
               ),
             ],

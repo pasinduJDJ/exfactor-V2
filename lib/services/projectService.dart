@@ -15,7 +15,7 @@ class ProjectService {
             status == 'Progress' ||
             status == 'In Progress') {
           liveProjectsCount++;
-          print('✅ Counted as live project: ${project['title']}');
+          print(' Counted as live project: ${project['title']}');
         }
       }
       print('Total live projects count: $liveProjectsCount');

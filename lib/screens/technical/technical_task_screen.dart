@@ -134,7 +134,7 @@ class _TaskTrackingBodyState extends State<TaskTrackingBody> {
   Widget build(BuildContext context) {
     List<Map<String, dynamic>> statusItems = [
       {'label': 'PENDING', 'count': pendingCount, 'color': kWhite},
-      {'label': 'In Progress', 'count': progressCount, 'color': kWhite},
+      {'label': 'On Progress', 'count': progressCount, 'color': kWhite},
       {'label': 'COMPLETE', 'count': completeCount, 'color': kWhite},
       {'label': 'OVER DUE', 'count': overdueCount, 'color': cardRed},
     ];
@@ -173,7 +173,7 @@ class _TaskTrackingBodyState extends State<TaskTrackingBody> {
                 ),
           const SizedBox(height: 30),
           UserUtils.buildExpandableGroup(
-            title: 'In Progress Task',
+            title: 'On Progress Task',
             color: cardGreen,
             expanded: showInProgress,
             onToggle: () {

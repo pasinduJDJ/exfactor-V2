@@ -39,7 +39,7 @@ class _TechnicalUpdateUserScreenState extends State<TechnicalUpdateUserScreen> {
 
   List<Map<String, dynamic>> _supervisors = [];
   int? _selectedSupervisorId;
-  final List<String> _roles = ['Technician', 'Supervisor'];
+  final List<String> _roles = ['Technical', 'Supervisor'];
   String? _selectedRole;
 
   int? _memberId;

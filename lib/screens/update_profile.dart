@@ -39,7 +39,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
 
   List<Map<String, dynamic>> _supervisors = [];
   int? _selectedSupervisorId;
-  final List<String> _roles = ['Technician', 'Supervisor', 'Sales', 'Admin'];
+  final List<String> _roles = ['Technical', 'Supervisor', 'Sales', 'Admin'];
   String? _selectedRole;
 
   @override

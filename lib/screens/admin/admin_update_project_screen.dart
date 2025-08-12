@@ -384,16 +384,7 @@ class _AdminUpdateProjectScreenState extends State<AdminUpdateProjectScreen> {
                     _buildTextField(_contactPersonController,
                         'Enter Primary Contact Person'),
                     const SizedBox(height: 12),
-                    _buildTextField(_emailController, 'Enter Contact Email',
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (val) {
-                      if (val == null || val.isEmpty) return 'Required';
-                      final emailRegex =
-                          RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$");
-                      if (!emailRegex.hasMatch(val))
-                        return 'Enter a valid email address';
-                      return null;
-                    }),
+                    _buildTextField(_emailController, 'Enter Contact Email'),
                     const SizedBox(height: 12),
                     _buildTextField(
                         _mobileController, 'Enter Contact  Mobile number',
@@ -508,6 +499,9 @@ class _AdminUpdateProjectScreenState extends State<AdminUpdateProjectScreen> {
                       onPressed: _handleSubmit,
                       isLoading: _isLoading,
                     ),
+                    const SizedBox(
+                      height: 10,
+                    )
                   ],
                 ),
               ),

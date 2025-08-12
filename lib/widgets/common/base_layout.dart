@@ -80,18 +80,18 @@ class BaseLayout extends StatelessWidget {
           ),
       body: body,
       bottomNavigationBar: Container(
-        height: 70, // Adjust this value to change the height
+        height: 70,
         decoration: const BoxDecoration(
           color: primaryColor,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
+          // borderRadius: BorderRadius.only(
+          //   topLeft: Radius.circular(20),
+          //   topRight: Radius.circular(20),
+          // ),
           boxShadow: [
             BoxShadow(
               color: Colors.black12,
               blurRadius: 5,
-              offset: Offset(0, -2),
+              offset: Offset(0, -10),
             ),
           ],
         ),
@@ -113,7 +113,8 @@ class BaseLayout extends StatelessWidget {
   }
 
   Widget _buildDrawer(BuildContext context) {
-    return Drawer(
+    return SafeArea(
+        child: Drawer(
       child: Column(
         children: [
           // Profile Section
@@ -282,6 +283,6 @@ class BaseLayout extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ));
   }
 }

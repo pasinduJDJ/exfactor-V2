@@ -137,7 +137,7 @@ class _TechnicalHomeState extends State<TechnicalHome> {
   Widget build(BuildContext context) {
     List<Map<String, dynamic>> statusItems = [
       {'label': 'PENDING', 'count': pendingCount, 'color': kWhite},
-      {'label': 'In Progress', 'count': progressCount, 'color': kWhite},
+      {'label': 'On Progress', 'count': progressCount, 'color': kWhite},
       {'label': 'COMPLETE', 'count': completeCount, 'color': kWhite},
       {'label': 'OVER DUE', 'count': overdueCount, 'color': cardRed},
     ];
@@ -176,7 +176,7 @@ class _TechnicalHomeState extends State<TechnicalHome> {
                 ),
           const SizedBox(height: 15),
           UserUtils.buildExpandableGroup(
-            title: 'In Progress Task',
+            title: 'On Progress Task',
             color: cardGreen,
             expanded: showInProgress,
             onToggle: () {

@@ -44,7 +44,7 @@ class _SupervisorUpdateUserScreenState
 
   List<Map<String, dynamic>> _supervisors = [];
   int? _selectedSupervisorId;
-  final List<String> _roles = ['Technician', 'Supervisor'];
+  final List<String> _roles = ['Technical', 'Supervisor'];
   String? _selectedRole;
 
   File? _pickedImage;

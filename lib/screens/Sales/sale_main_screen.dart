@@ -38,7 +38,7 @@ class _SalesMainScreenState extends State<SalesMainScreen> {
       label: 'Home',
     ),
     BottomNavigationBarItem(
-      icon: Icon(Icons.checklist),
+      icon: Icon(Icons.track_changes),
       label: 'Tasks',
     ),
     BottomNavigationBarItem(
@@ -55,7 +55,7 @@ class _SalesMainScreenState extends State<SalesMainScreen> {
     switch (_currentIndex) {
       case 1:
         return const CustomAppBarWithIcon(
-            title: 'Sales Task Tracking', icon: Icons.list_alt);
+            title: 'Sales Tracking', icon: Icons.list_alt);
       case 2:
         return const CustomAppBarWithIcon(
             title: 'Notifications', icon: Icons.notifications_active);

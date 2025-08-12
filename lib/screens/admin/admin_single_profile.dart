@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../utils/colors.dart';
 import 'package:exfactor/services/superbase_service.dart';
 import 'package:exfactor/widgets/utils_widget.dart';
+import 'package:exfactor/screens/admin/admin_update_user.dart';
 
 class AdminSingleProfileScreen extends StatefulWidget {
   final String userEmail;
@@ -206,75 +207,154 @@ class _AdminSingleProfileScreenState extends State<AdminSingleProfileScreen> {
                       const SizedBox(
                         height: 10,
                       ),
-                      CustomButton(
-                        text: "Remove Member",
-                        onPressed: () async {
-                          final confirm = await showDialog<bool>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Remove Member'),
-                              content: const Text(
-                                  'Are you sure you want to remove this user?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, false),
-                                  child: const Text('No'),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () => Navigator.pop(context, true),
-                                  child: const Text('Yes'),
-                                ),
-                              ],
+                      const Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Account Actions",
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 4,
+                              offset: Offset(0, 2),
                             ),
-                          );
-                          if (confirm == true) {
-                            setState(() {
-                              isLoading = true;
-                            });
-                            try {
-                              final userIdInt =
-                                  int.tryParse(user!['member_id'].toString());
-                              if (userIdInt == null) {
-                                if (mounted) {
-                                  UserUtils.showToast(
-                                    "Error: member_id is null or invalid.",
-                                    Colors.red,
-                                    context,
-                                  );
-                                }
-                              } else {
-                                await SupabaseService.deleteUser(userIdInt);
-                                if (mounted) {
-                                  UserUtils.showToast(
-                                    "User removed successfully.",
-                                    Colors.green,
-                                    context,
-                                  );
-                                  // Navigate back with result
-                                  if (context.mounted) {
-                                    Navigator.of(context).pop('user_removed');
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            ListTile(
+                              leading:
+                                  const Icon(Icons.edit, color: primaryColor),
+                              title: const Text(
+                                "Update User",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              trailing: const Icon(
+                                Icons.arrow_forward_ios,
+                                size: 13,
+                                color: primaryColor,
+                              ),
+                              onTap: () async {
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => AdminUpdateUserScreen(
+                                        memberId: user!['member_id']),
+                                  ),
+                                );
+                                // Refresh user data after update
+                                await fetchUser();
+                              },
+                            ),
+                            const Divider(thickness: 1),
+                            ListTile(
+                              leading: const Icon(
+                                Icons.delete,
+                                color: primaryColor,
+                              ),
+                              title: const Text(
+                                "Remove Member",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              trailing: const Icon(
+                                Icons.arrow_forward_ios,
+                                size: 13,
+                                color: primaryColor,
+                              ),
+                              onTap: () async {
+                                final confirm = await showDialog<bool>(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('Remove Member'),
+                                    content: const Text(
+                                        'Are you sure you want to remove this user?'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, false),
+                                        child: const Text('No'),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, true),
+                                        child: const Text('Yes'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                if (confirm == true) {
+                                  setState(() {
+                                    isLoading = true;
+                                  });
+                                  try {
+                                    final userIdInt = int.tryParse(
+                                        user!['member_id'].toString());
+                                    if (userIdInt == null) {
+                                      if (mounted) {
+                                        UserUtils.showToast(
+                                          "Error: member_id is null or invalid.",
+                                          Colors.red,
+                                          context,
+                                        );
+                                      }
+                                    } else {
+                                      await SupabaseService.deleteUser(
+                                          userIdInt);
+                                      if (mounted) {
+                                        UserUtils.showToast(
+                                          "User removed successfully.",
+                                          Colors.green,
+                                          context,
+                                        );
+                                        // Navigate back with result
+                                        if (context.mounted) {
+                                          Navigator.of(context)
+                                              .pop('user_removed');
+                                        }
+                                      }
+                                    }
+                                  } catch (e) {
+                                    if (mounted) {
+                                      UserUtils.showToast(
+                                        "Failed to remove user: ${e.toString()}",
+                                        Colors.red,
+                                        context,
+                                      );
+                                    }
+                                  } finally {
+                                    if (mounted) {
+                                      setState(() {
+                                        isLoading = false;
+                                      });
+                                    }
                                   }
                                 }
-                              }
-                            } catch (e) {
-                              if (mounted) {
-                                UserUtils.showToast(
-                                  "Failed to remove user: ${e.toString()}",
-                                  Colors.red,
-                                  context,
-                                );
-                              }
-                            } finally {
-                              if (mounted) {
-                                setState(() {
-                                  isLoading = false;
-                                });
-                              }
-                            }
-                          }
-                        },
-                        backgroundColor: primaryColor,
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(
                         height: 16,

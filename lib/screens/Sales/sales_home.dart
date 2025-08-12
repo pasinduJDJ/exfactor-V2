@@ -401,7 +401,7 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            "Monthly Sales Analyze",
+            "Monthly Sales Analysis",
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,

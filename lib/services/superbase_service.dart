@@ -213,11 +213,10 @@ class SupabaseService {
   }
 
   // Technical  ////////////////////////////////////////////////////////////////////////////////////////////////////
-  // GET TECHNICAL MEMBERS (users with technician role)
+  // GET TECHNICAL MEMBERS (users with Technical role)
   static Future<List<Map<String, dynamic>>> getTechnicalMembers() async {
     try {
-      print(
-          'Querying for technical members with role: technical or Technician');
+      print('Querying for technical members with role: Technical');
       final response = await _client
           .from('user')
           .select('member_id, first_name, last_name')
@@ -262,8 +261,12 @@ class SupabaseService {
 
   // GET USER BY EMAIL
   static Future<Map<String, dynamic>?> getUserByEmail(String email) async {
-    final response =
-        await _client.from('user').select().eq('email', email).maybeSingle();
+    final response = await _client
+        .from('user')
+        .select(
+            'email, password, role, member_id, first_name, last_name, mobile, birthday, join_date, designation_date, profile_image, supervisor, emergency_name, emergency_number, emergency_relationship, position')
+        .eq('email', email)
+        .maybeSingle();
     if (response == null) return null;
     return Map<String, dynamic>.from(response);
   }

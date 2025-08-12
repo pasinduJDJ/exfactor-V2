@@ -4,6 +4,43 @@ import 'package:exfactor/widgets/common/custom_button.dart';
 import 'package:exfactor/services/dealService.dart';
 import 'package:exfactor/services/superbase_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
+
+// Top-level formatter for thousand separators with optional decimals
+class ThousandsFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.isEmpty) {
+      return newValue.copyWith(text: '');
+    }
+
+    String text = newValue.text.replaceAll(RegExp(r'[^0-9.]'), '');
+
+    // Ensure only one decimal point
+    List<String> parts = text.split('.');
+    if (parts.length > 2) {
+      text = '${parts[0]}.${parts.sublist(1).join('')}';
+      parts = text.split('.');
+    }
+
+    // Format the integer part with commas
+    if (parts.isNotEmpty && parts[0].isNotEmpty) {
+      final formatter = NumberFormat('#,##0');
+      parts[0] = formatter.format(int.tryParse(parts[0]) ?? 0);
+    }
+
+    String formattedText = parts.join('.');
+
+    return TextEditingValue(
+      text: formattedText,
+      selection: TextSelection.collapsed(offset: formattedText.length),
+    );
+  }
+}
 
 class CreateDeal extends StatefulWidget {
   const CreateDeal({super.key});
@@ -67,6 +104,11 @@ class _CreateDealState extends State<CreateDeal> {
     super.dispose();
   }
 
+  double _parseFormattedNumber(String text) {
+    if (text.isEmpty) return 0;
+    return double.tryParse(text.replaceAll(',', '')) ?? 0;
+  }
+
   Future<void> _submitDeal() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -128,7 +170,7 @@ class _CreateDealState extends State<CreateDeal> {
       // Create deal using DealService
       final success = await DealService.createDeal(
         prospectName: _prospectNameController.text.trim(),
-        dealSize: double.parse(_dealSizeController.text.trim()),
+        dealSize: _parseFormattedNumber(_dealSizeController.text.trim()),
         product: _productController.text.trim(),
         city: _cityController.text.trim(),
         country: _countryController.text.trim(),
@@ -204,7 +246,9 @@ class _CreateDealState extends State<CreateDeal> {
             children: [
               _buildTextField('Prospect Name', _prospectNameController),
               _buildTextField('Deal Size', _dealSizeController,
-                  keyboardType: TextInputType.number),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [ThousandsFormatter()]),
               _buildTextField('Product', _productController),
               _buildTextField('City', _cityController),
               _buildTextField('Country', _countryController),
@@ -239,7 +283,8 @@ class _CreateDealState extends State<CreateDeal> {
   }
 
   Widget _buildTextField(String label, TextEditingController controller,
-      {TextInputType keyboardType = TextInputType.text}) {
+      {TextInputType keyboardType = TextInputType.text,
+      List<TextInputFormatter>? inputFormatters}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Column(
@@ -253,6 +298,7 @@ class _CreateDealState extends State<CreateDeal> {
           TextFormField(
             controller: controller,
             keyboardType: keyboardType,
+            inputFormatters: inputFormatters,
             decoration: InputDecoration(
               filled: true,
               fillColor: Colors.white,
@@ -274,6 +320,12 @@ class _CreateDealState extends State<CreateDeal> {
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter $label';
+              }
+              if (label == 'Deal Size') {
+                final amount = _parseFormattedNumber(value);
+                if (amount <= 0) {
+                  return 'Please enter a valid amount';
+                }
               }
               return null;
             },

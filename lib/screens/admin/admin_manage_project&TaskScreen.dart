@@ -149,7 +149,7 @@ class _AdminProjectManageState extends State<AdminProjectManage> {
     setState(() {
       statusProjectOverview = [
         {'label': 'PENDING', 'count': pending, 'color': kWhite},
-        {'label': 'In Progress', 'count': onProgress, 'color': kWhite},
+        {'label': 'On Progress', 'count': onProgress, 'color': kWhite},
         {'label': 'OVER DUE', 'count': overdue, 'color': cardRed},
         // Optionally add complete count here if you want to show it in the UI
         // {'label': 'COMPLETE', 'count': complete, 'color': Colors.blue},
@@ -221,7 +221,7 @@ class _AdminProjectManageState extends State<AdminProjectManage> {
     setState(() {
       statusTaskOverView = [
         {'label': 'PENDING', 'count': pending, 'color': kWhite},
-        {'label': 'In Progress', 'count': onProgress, 'color': kWhite},
+        {'label': 'On Progress', 'count': onProgress, 'color': kWhite},
         {'label': 'OVER DUE', 'count': overdue, 'color': cardRed},
         // Optionally add complete count here if you want to show it in the UI
         // {'label': 'COMPLETE', 'count': complete, 'color': Colors.blue},
@@ -527,7 +527,7 @@ class _AdminProjectManageState extends State<AdminProjectManage> {
               ),
               // In Progress Project Table list  Start
               UserUtils.buildExpandableGroup(
-                title: "In Progress Project",
+                title: "On Progress Project",
                 color: cardDarkGreen,
                 expanded: showProjectProgress,
                 onToggle: () =>
@@ -670,7 +670,7 @@ class _AdminProjectManageState extends State<AdminProjectManage> {
               ),
               // on Progress Task Table
               UserUtils.buildExpandableGroup(
-                title: "In Progress Task",
+                title: "On Progress Task",
                 color: cardDarkGreen,
                 expanded: showTaskProgress,
                 onToggle: () =>

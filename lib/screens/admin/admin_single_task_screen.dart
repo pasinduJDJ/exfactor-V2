@@ -144,7 +144,7 @@ class _AdminSingleTaskScreenState extends State<AdminSingleTaskScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Mange Task',
+        title: const Text('Task Summary',
             style: TextStyle(fontWeight: FontWeight.bold)),
         toolbarHeight: 70,
         leading: IconButton(
@@ -195,7 +195,7 @@ class _AdminSingleTaskScreenState extends State<AdminSingleTaskScreen> {
                                     _infoRow('Task Title',
                                         task!['title']?.toString() ?? ''),
                                     const Divider(thickness: 1),
-                                    _infoRow('Supervisor name',
+                                    _infoRow('Supervisor Name',
                                         supervisorName ?? ''),
                                     const Divider(thickness: 1),
                                     _infoRow(

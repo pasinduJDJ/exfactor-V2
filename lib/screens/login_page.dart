@@ -9,6 +9,7 @@ import 'package:exfactor/services/superbase_service.dart';
 import 'package:exfactor/models/user_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:local_auth/local_auth.dart';
+import 'dart:io';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -26,6 +27,16 @@ class _LoginPageState extends State<LoginPage> {
   bool _biometricEnabled = false;
   final LocalAuthentication auth = LocalAuthentication();
   bool _obscurePassword = true; // Added for password visibility
+
+  // Network connectivity check
+  Future<bool> _checkInternetConnection() async {
+    try {
+      final result = await InternetAddress.lookup('google.com');
+      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+    } on SocketException catch (_) {
+      return false;
+    }
+  }
 
   @override
   void initState() {
@@ -52,19 +63,45 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _loadBiometricEnabled() async {
     final prefs = await SharedPreferences.getInstance();
+    final biometricEnabled = prefs.getBool('biometric_enabled') ?? false;
+
+    print('DEBUG: Loading biometric enabled: $biometricEnabled');
 
     setState(() {
-      _biometricEnabled = prefs.getBool('biometric_enabled') ?? false;
+      _biometricEnabled = biometricEnabled;
     });
   }
 
   Future<void> _performLogin(String email, String password) async {
     try {
-      final userData = await SupabaseService.getUserByEmail(email);
-      if (userData == null) {
-        _showToast("User not found in database.");
+      // Check internet connection first
+      final hasInternet = await _checkInternetConnection();
+      if (!hasInternet) {
+        _showToast(
+            "No internet connection. Please check your network and try again.");
         return;
       }
+
+      final userData = await SupabaseService.getUserByEmail(email);
+      if (userData == null) {
+        _showToast("Invalid email or password.");
+        return;
+      }
+
+      // Debug logging to troubleshoot the issue
+      print('DEBUG: User data retrieved: ${userData.keys.toList()}');
+      print(
+          'DEBUG: Password field exists: ${userData.containsKey('password')}');
+      print('DEBUG: Stored password: ${userData['password']}');
+      print('DEBUG: Input password: $password');
+
+      // CRITICAL SECURITY FIX: Validate password
+      final storedPassword = userData['password'] ?? '';
+      if (password != storedPassword) {
+        _showToast("Invalid email or password.");
+        return;
+      }
+
       final userModel = UserModel.fromMap(userData);
 
       // Save session after successful login
@@ -75,7 +112,24 @@ class _LoginPageState extends State<LoginPage> {
 
       _navigateToUserScreen(userModel);
     } catch (e) {
-      _showToast("Login failed: ${e.toString()}");
+      // Handle specific error types with user-friendly messages
+      String errorMessage = "Login failed. Please try again.";
+
+      if (e.toString().contains('SocketException') ||
+          e.toString().contains('Connection reset') ||
+          e.toString().contains('Network is unreachable')) {
+        errorMessage =
+            "No internet connection. Please check your network and try again.";
+      } else if (e.toString().contains('timeout') ||
+          e.toString().contains('Connection timed out')) {
+        errorMessage =
+            "Connection timeout. Please check your internet speed and try again.";
+      } else if (e.toString().contains('JWT') ||
+          e.toString().contains('authentication')) {
+        errorMessage = "Authentication error. Please login again.";
+      }
+
+      _showToast(errorMessage);
     }
   }
 
@@ -104,6 +158,10 @@ class _LoginPageState extends State<LoginPage> {
       );
       if (enable == true) {
         await prefs.setBool('biometric_enabled', true);
+        // Update the state variable immediately
+        setState(() {
+          _biometricEnabled = true;
+        });
         _showToast('Biometric login enabled!');
       }
     }
@@ -115,8 +173,16 @@ class _LoginPageState extends State<LoginPage> {
         'user_name', (user.firstName ?? '') + ' ' + (user.lastName ?? ''));
     await prefs.setString('role', user.role ?? '');
     await prefs.setInt('member_id', user.memberId);
+
+    // Store additional data for biometrics that survives logout
+    await prefs.setString('biometric_user_email', user.email ?? '');
+    await prefs.setString('biometric_user_role', user.role ?? '');
+    await prefs.setInt('biometric_member_id', user.memberId);
+
     print(
-        'Session saved: member_id= [32m${user.memberId} [0m, role= [32m${user.role} [0m');
+        'DEBUG: Session saved: member_id= ${user.memberId}, role= ${user.role}');
+    print(
+        'DEBUG: Biometrics data saved: email= ${user.email}, member_id= ${user.memberId}');
   }
 
   Future<void> _clearUserSession() async {
@@ -191,19 +257,73 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _loginWithSavedSessionOrCredentials() async {
-    final prefs = await SharedPreferences.getInstance();
-    final memberId = prefs.getInt('member_id');
-    final role = prefs.getString('role');
-
-    if (memberId != null && role != null) {
-      final userData = await SupabaseService.getUserByMemberId(memberId);
-      if (userData != null) {
-        final userModel = UserModel.fromMap(userData);
-        _navigateToUserScreen(userModel);
+    try {
+      // Check internet connection first
+      final hasInternet = await _checkInternetConnection();
+      if (!hasInternet) {
+        _showToast(
+            "No internet connection. Please check your network and try again.");
         return;
       }
+
+      final prefs = await SharedPreferences.getInstance();
+
+      // First try to use current session data
+      final memberId = prefs.getInt('member_id');
+      final role = prefs.getString('role');
+
+      if (memberId != null && role != null) {
+        final userData = await SupabaseService.getUserByMemberId(memberId);
+        if (userData != null) {
+          final userModel = UserModel.fromMap(userData);
+          _navigateToUserScreen(userModel);
+          return;
+        }
+      }
+
+      // If current session is not available, try biometrics data (for post-logout biometrics)
+      final biometricMemberId = prefs.getInt('biometric_member_id');
+      final biometricRole = prefs.getString('biometric_user_role');
+
+      if (biometricMemberId != null && biometricRole != null) {
+        print(
+            'DEBUG: Using biometrics data for login - member_id: $biometricMemberId, role: $biometricRole');
+
+        final userData =
+            await SupabaseService.getUserByMemberId(biometricMemberId);
+        if (userData != null) {
+          final userModel = UserModel.fromMap(userData);
+
+          // Restore the session data
+          await _saveUserSession(userModel);
+
+          _navigateToUserScreen(userModel);
+          return;
+        }
+      }
+
+      _showToast(
+          'No saved session found. Please login with email and password.');
+    } catch (e) {
+      // Handle specific error types with user-friendly messages
+      String errorMessage = "Biometric login failed. Please try again.";
+
+      if (e.toString().contains('SocketException') ||
+          e.toString().contains('Connection reset') ||
+          e.toString().contains('Network is unreachable')) {
+        errorMessage =
+            "No internet connection. Please check your network and try again.";
+      } else if (e.toString().contains('timeout') ||
+          e.toString().contains('Connection timed out')) {
+        errorMessage =
+            "Connection timeout. Please check your internet speed and try again.";
+      } else if (e.toString().contains('JWT') ||
+          e.toString().contains('authentication')) {
+        errorMessage = "Authentication error. Please login again.";
+      }
+
+      _showToast(errorMessage);
     }
-    _showToast('No saved session found. Please login with email and password.');
   }
 
   @override
@@ -239,6 +359,48 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     const SizedBox(height: 100),
+                    // Network status indicator
+                    FutureBuilder<bool>(
+                      future: _checkInternetConnection(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const SizedBox.shrink();
+                        }
+
+                        final hasInternet = snapshot.data ?? false;
+                        if (!hasInternet) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            margin: const EdgeInsets.only(bottom: 20),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.shade100,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.orange.shade300),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.wifi_off,
+                                    color: Colors.orange.shade700, size: 16),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'No internet connection',
+                                  style: TextStyle(
+                                    color: Colors.orange.shade700,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        return const SizedBox.shrink();
+                      },
+                    ),
                     const Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
@@ -335,11 +497,18 @@ class _LoginPageState extends State<LoginPage> {
                         icon: Icon(Icons.fingerprint),
                         label: Text('Login with Fingerprint/Face'),
                         onPressed: () async {
+                          print('DEBUG: Biometrics button pressed');
+                          print(
+                              'DEBUG: _biometricsAvailable: $_biometricsAvailable');
+                          print('DEBUG: _biometricEnabled: $_biometricEnabled');
+
                           bool authenticated =
                               await _authenticateWithBiometrics();
                           if (authenticated) {
+                            print('DEBUG: Biometric authentication successful');
                             await _loginWithSavedSessionOrCredentials();
                           } else {
+                            print('DEBUG: Biometric authentication failed');
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                   content:
@@ -370,11 +539,47 @@ void _showToast(String message) {
 
 void handleLogout(BuildContext context) async {
   final prefs = await SharedPreferences.getInstance();
+
+  // Clear current session but keep data for biometrics
   await prefs.remove('user_name');
   await prefs.remove('role');
   await prefs.remove('member_id');
-  // Do NOT remove 'biometric_enabled' so biometric login remains enabled after logout
 
+  // Do NOT remove 'biometric_enabled' so biometric login remains enabled after logout
+  // Do NOT remove session data if biometrics is enabled - this allows biometric login after logout
+
+  Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(builder: (_) => LoginPage()),
+    (route) => false,
+  );
+}
+
+// New function to completely clear all data (use this for app uninstall or security purposes)
+void clearAllData(BuildContext context) async {
+  final prefs = await SharedPreferences.getInstance();
+
+  // Clear everything including biometrics
+  await prefs.clear();
+
+  Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(builder: (_) => LoginPage()),
+    (route) => false,
+  );
+}
+
+// Function to clear only biometrics data (for user who wants to disable biometrics)
+void clearBiometricsData(BuildContext context) async {
+  final prefs = await SharedPreferences.getInstance();
+
+  // Clear biometrics-related data
+  await prefs.remove('biometric_enabled');
+  await prefs.remove('biometric_user_email');
+  await prefs.remove('biometric_user_role');
+  await prefs.remove('biometric_member_id');
+
+  // Navigate back to login
   Navigator.pushAndRemoveUntil(
     context,
     MaterialPageRoute(builder: (_) => LoginPage()),

@@ -74,7 +74,7 @@ class _SplashScreenState extends State<SplashScreen> {
               MaterialPageRoute(
                   builder: (_) => SupervisorMainScreen(user: userModel)));
           return;
-        } else if (role == 'Technician') {
+        } else if (role == 'Technical') {
           Navigator.pushReplacement(
               context,
               MaterialPageRoute(

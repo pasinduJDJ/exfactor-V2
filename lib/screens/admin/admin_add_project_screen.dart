@@ -272,7 +272,7 @@ class _AdminAddProjectScreenState extends State<AdminAddProjectScreen> {
         projectStartDate: _commencementDate!.toIso8601String(),
         projectEndDate: _deliveryDate!.toIso8601String(),
         supervisorId: _selectedSupervisorOrAdmin!, // Can be supervisor or admin
-        projectStatus: 'pending',
+        projectStatus: 'Pending',
       );
 
       await SupabaseService.insertProject(project);
@@ -334,14 +334,7 @@ class _AdminAddProjectScreenState extends State<AdminAddProjectScreen> {
               _buildTextField(
                   _contactPersonController, 'Enter Primary Contact Person'),
               const SizedBox(height: 8),
-              _buildTextField(_emailController, 'Enter Contact Email',
-                  keyboardType: TextInputType.emailAddress, validator: (val) {
-                if (val == null || val.isEmpty) return 'Required';
-                final emailRegex = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$");
-                if (!emailRegex.hasMatch(val))
-                  return 'Enter a valid email address';
-                return null;
-              }),
+              _buildTextField(_emailController, 'Enter Contact Email'),
               const SizedBox(height: 8),
               _buildTextField(_mobileController, 'Enter Contact  Mobile number',
                   keyboardType: TextInputType.phone, validator: (val) {
@@ -428,7 +421,7 @@ class _AdminAddProjectScreenState extends State<AdminAddProjectScreen> {
                 onPressed: _handleSubmit,
                 isLoading: _isLoading,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
             ],
           ),
         ),

@@ -182,7 +182,7 @@ class _SalesTaskScreenState extends State<SalesTaskScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 4),
             children: [
               _buildSalesAnalyzeCard(
-                title: "Monthly Sales Analyze",
+                title: "Monthly Sales Analysis",
                 salesTarget: formatCurrency(monthlyTarget),
                 registeredClients: latestDeals
                     .where((deal) {
@@ -198,7 +198,7 @@ class _SalesTaskScreenState extends State<SalesTaskScreen> {
               ),
               const SizedBox(width: 16),
               _buildSalesAnalyzeCard(
-                title: "Quarterly Sales Analyze",
+                title: "Quarterly Sales Analysis",
                 salesTarget: formatCurrency(quarterlyTarget),
                 registeredClients: latestDeals
                     .where((deal) {
@@ -217,7 +217,7 @@ class _SalesTaskScreenState extends State<SalesTaskScreen> {
               ),
               const SizedBox(width: 16),
               _buildSalesAnalyzeCard(
-                title: "Annual Sales Analyze",
+                title: "Annual Sales Analysis",
                 salesTarget: formatCurrency(annualTarget),
                 registeredClients: latestDeals
                     .where((deal) {

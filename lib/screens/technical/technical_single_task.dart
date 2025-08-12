@@ -94,7 +94,7 @@ class _TechnicalSingleTaskState extends State<TechnicalSingleTask> {
       backgroundColor: backgroundColor,
       appBar: AppBar(
         title: const Text(
-          'Single Task',
+          'Task Summary',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         toolbarHeight: 70,
