@@ -34,10 +34,13 @@ class _SalesTaskScreenState extends State<SalesTaskScreen> {
       final assignedTargets = await SaleService.getCurrentUserAssignedTargets();
       print('Assigned targets: $assignedTargets');
 
-      // Get all registered sales for current user using SaleService (ALL deals)
-      final allRegisteredSales =
-          await SaleService.getCurrentUserAllRegisteredSales();
-      print('All registered sales: $allRegisteredSales');
+      // Get achieved sales (negotiation + won deals only) using SaleService
+      final achievedSales = await SaleService.getCurrentUserAchievedSales();
+      print('Achieved sales (negotiation + won): $achievedSales');
+
+      // Get pipeline deals (all deals except lost) using SaleService
+      final pipelineDeals = await SaleService.getCurrentUserPipelineDeals();
+      print('Pipeline deals (all except lost): $pipelineDeals');
 
       // Get latest deals for current user using DealService
       final deals = await DealService.getCurrentUserDeals();
@@ -45,7 +48,8 @@ class _SalesTaskScreenState extends State<SalesTaskScreen> {
 
       setState(() {
         userAssignedTargets = assignedTargets;
-        userAchievedSales = allRegisteredSales;
+        userAchievedSales =
+            achievedSales; // Use achieved sales (negotiation + won)
         latestDeals = deals;
         isLoading = false;
       });
@@ -145,31 +149,67 @@ class _SalesTaskScreenState extends State<SalesTaskScreen> {
     final quarterlyTarget = _getCurrentQuarterTarget();
     final monthlyTarget = _getCurrentMonthTarget();
 
-    // Calculate registered sales (ALL deals regardless of status)
-    final annualRegisteredSales = latestDeals.where((deal) {
+    // Calculate achieved sales (negotiation + won deals only)
+    final annualAchieved = latestDeals.where((deal) {
       final dealDate = DateTime.parse(deal['created_at']);
       final now = DateTime.now();
-      return dealDate.year == now.year;
+      final dealStatus = (deal['deal_status'] ?? '').toString().toLowerCase();
+      return dealDate.year == now.year &&
+          (dealStatus == 'negotiation' || dealStatus == 'won');
     }).fold<double>(0, (sum, deal) => sum + (deal['deal_amount'] ?? 0));
 
-    final quarterlyRegisteredSales = latestDeals.where((deal) {
+    final quarterlyAchieved = latestDeals.where((deal) {
       final dealDate = DateTime.parse(deal['created_at']);
       final now = DateTime.now();
       final dealQuarter = ((dealDate.month - 1) / 3).floor() + 1;
       final currentQuarter = ((now.month - 1) / 3).floor() + 1;
-      return dealDate.year == now.year && dealQuarter == currentQuarter;
+      final dealStatus = (deal['deal_status'] ?? '').toString().toLowerCase();
+      return dealDate.year == now.year &&
+          dealQuarter == currentQuarter &&
+          (dealStatus == 'negotiation' || dealStatus == 'won');
     }).fold<double>(0, (sum, deal) => sum + (deal['deal_amount'] ?? 0));
 
-    final monthlyRegisteredSales = latestDeals.where((deal) {
+    final monthlyAchieved = latestDeals.where((deal) {
       final dealDate = DateTime.parse(deal['created_at']);
       final now = DateTime.now();
-      return dealDate.year == now.year && dealDate.month == now.month;
+      final dealStatus = (deal['deal_status'] ?? '').toString().toLowerCase();
+      return dealDate.year == now.year &&
+          dealDate.month == now.month &&
+          (dealStatus == 'negotiation' || dealStatus == 'won');
     }).fold<double>(0, (sum, deal) => sum + (deal['deal_amount'] ?? 0));
 
-    // Calculate remaining amounts
-    final annualRemaining = annualTarget - annualRegisteredSales;
-    final quarterlyRemaining = quarterlyTarget - quarterlyRegisteredSales;
-    final monthlyRemaining = monthlyTarget - monthlyRegisteredSales;
+    // Calculate pipeline deals (all deals except lost)
+    final annualPipeline = latestDeals.where((deal) {
+      final dealDate = DateTime.parse(deal['created_at']);
+      final now = DateTime.now();
+      final dealStatus = (deal['deal_status'] ?? '').toString().toLowerCase();
+      return dealDate.year == now.year && dealStatus != 'lost';
+    }).fold<double>(0, (sum, deal) => sum + (deal['deal_amount'] ?? 0));
+
+    final quarterlyPipeline = latestDeals.where((deal) {
+      final dealDate = DateTime.parse(deal['created_at']);
+      final now = DateTime.now();
+      final dealQuarter = ((dealDate.month - 1) / 3).floor() + 1;
+      final currentQuarter = ((now.month - 1) / 3).floor() + 1;
+      final dealStatus = (deal['deal_status'] ?? '').toString().toLowerCase();
+      return dealDate.year == now.year &&
+          dealQuarter == currentQuarter &&
+          dealStatus != 'lost';
+    }).fold<double>(0, (sum, deal) => sum + (deal['deal_amount'] ?? 0));
+
+    final monthlyPipeline = latestDeals.where((deal) {
+      final dealDate = DateTime.parse(deal['created_at']);
+      final now = DateTime.now();
+      final dealStatus = (deal['deal_status'] ?? '').toString().toLowerCase();
+      return dealDate.year == now.year &&
+          dealDate.month == now.month &&
+          dealStatus != 'lost';
+    }).fold<double>(0, (sum, deal) => sum + (deal['deal_amount'] ?? 0));
+
+    // Calculate remaining amounts (target - achievement)
+    final annualRemaining = annualTarget - annualAchieved;
+    final quarterlyRemaining = quarterlyTarget - quarterlyAchieved;
+    final monthlyRemaining = monthlyTarget - monthlyAchieved;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -188,12 +228,15 @@ class _SalesTaskScreenState extends State<SalesTaskScreen> {
                     .where((deal) {
                       final dealDate = DateTime.parse(deal['created_at']);
                       final now = DateTime.now();
+                      final dealStatus =
+                          (deal['deal_status'] ?? '').toString().toLowerCase();
                       return dealDate.year == now.year &&
-                          dealDate.month == now.month;
+                          dealDate.month == now.month &&
+                          dealStatus != 'lost';
                     })
                     .length
                     .toString(),
-                registeredSales: formatCurrency(monthlyRegisteredSales),
+                registeredSales: formatCurrency(monthlyPipeline),
                 remainingSales: formatCurrency(monthlyRemaining),
               ),
               const SizedBox(width: 16),
@@ -207,12 +250,15 @@ class _SalesTaskScreenState extends State<SalesTaskScreen> {
                       final dealQuarter =
                           ((dealDate.month - 1) / 3).floor() + 1;
                       final currentQuarter = ((now.month - 1) / 3).floor() + 1;
+                      final dealStatus =
+                          (deal['deal_status'] ?? '').toString().toLowerCase();
                       return dealDate.year == now.year &&
-                          dealQuarter == currentQuarter;
+                          dealQuarter == currentQuarter &&
+                          dealStatus != 'lost';
                     })
                     .length
                     .toString(),
-                registeredSales: formatCurrency(quarterlyRegisteredSales),
+                registeredSales: formatCurrency(quarterlyPipeline),
                 remainingSales: formatCurrency(quarterlyRemaining),
               ),
               const SizedBox(width: 16),
@@ -223,11 +269,13 @@ class _SalesTaskScreenState extends State<SalesTaskScreen> {
                     .where((deal) {
                       final dealDate = DateTime.parse(deal['created_at']);
                       final now = DateTime.now();
-                      return dealDate.year == now.year;
+                      final dealStatus =
+                          (deal['deal_status'] ?? '').toString().toLowerCase();
+                      return dealDate.year == now.year && dealStatus != 'lost';
                     })
                     .length
                     .toString(),
-                registeredSales: formatCurrency(annualRegisteredSales),
+                registeredSales: formatCurrency(annualPipeline),
                 remainingSales: formatCurrency(annualRemaining),
               ),
             ],

@@ -42,7 +42,7 @@ class SaleService {
     }
   }
 
-  // Get current user's achieved sales (closed/won deals only)
+  // Get current user's achieved sales (negotiation + won deals only)
   static Future<Map<String, double>> getCurrentUserAchievedSales() async {
     try {
       // Get current user ID from SharedPreferences
@@ -64,14 +64,94 @@ class SaleService {
       final currentUserId = userData['user_id'];
       print('Current user UUID: $currentUserId');
 
-      // Get achieved sales for current user (closed/won deals only)
+      // Get achieved sales for current user (negotiation + won deals only)
       final achievedSales =
           await SupabaseService.calculateUserAchievedSales(currentUserId);
-      print('Achieved sales (closed/won): $achievedSales');
+      print('Achieved sales (negotiation + won): $achievedSales');
 
       return achievedSales;
     } catch (e) {
       print('Error loading user achieved sales: $e');
+      return _getDefaultAchievedSales();
+    }
+  }
+
+  // Get current user's pipeline deals (all deals except lost)
+  static Future<Map<String, double>> getCurrentUserPipelineDeals() async {
+    try {
+      // Get current user ID from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final memberId = prefs.getInt('member_id');
+
+      if (memberId == null) {
+        print('No member ID found in SharedPreferences');
+        return _getDefaultAchievedSales();
+      }
+
+      // Get current user's UUID
+      final userData = await SupabaseService.getUserByMemberId(memberId);
+      if (userData == null) {
+        print('No user data found for member ID: $memberId');
+        return _getDefaultAchievedSales();
+      }
+
+      final currentUserId = userData['user_id'];
+      print('Current user UUID: $currentUserId');
+
+      // Get all deals for current user
+      final deals = await SupabaseService.getDealsByUserId(currentUserId);
+      print('All deals for user: ${deals.length}');
+
+      double totalPipeline = 0;
+      double monthlyPipeline = 0;
+      double quarterlyPipeline = 0;
+      double annualPipeline = 0;
+
+      final now = DateTime.now();
+      final currentMonth = now.month;
+      final currentQuarter = ((currentMonth - 1) / 3).floor() + 1;
+      final currentYear = now.year;
+
+      for (final deal in deals) {
+        final dealAmount = (deal['deal_amount'] ?? 0).toDouble();
+        final dealDate = deal['created_at'] != null
+            ? DateTime.parse(deal['created_at'])
+            : now;
+        final dealStatus = (deal['deal_status'] ?? '').toString().toLowerCase();
+
+        // Count all deals EXCEPT lost deals (pipeline deals)
+        if (dealStatus != 'lost') {
+          totalPipeline += dealAmount;
+
+          // Check if deal is from current year
+          if (dealDate.year == currentYear) {
+            annualPipeline += dealAmount;
+
+            // Check if deal is from current quarter
+            final dealQuarter = ((dealDate.month - 1) / 3).floor() + 1;
+            if (dealQuarter == currentQuarter) {
+              quarterlyPipeline += dealAmount;
+            }
+
+            // Check if deal is from current month
+            if (dealDate.month == currentMonth) {
+              monthlyPipeline += dealAmount;
+            }
+          }
+        }
+      }
+
+      final result = {
+        'total': totalPipeline,
+        'monthly': monthlyPipeline,
+        'quarterly': quarterlyPipeline,
+        'annual': annualPipeline,
+      };
+
+      print('Pipeline deals (all except lost): $result');
+      return result;
+    } catch (e) {
+      print('Error loading user pipeline deals: $e');
       return _getDefaultAchievedSales();
     }
   }
@@ -547,7 +627,7 @@ class SaleService {
     }
   }
 
-  // Get specific member's achieved sales (ALL deals regardless of status)
+  // Get specific member's achieved sales (negotiation + won deals only)
   static Future<Map<String, double>> getMemberAchievedSales(
       String memberId) async {
     try {
@@ -573,10 +653,10 @@ class SaleService {
       final deals = await SupabaseService.getDealsByUserId(userId);
       print('All deals for member: ${deals.length}');
 
-      double totalRegistered = 0;
-      double monthlyRegistered = 0;
-      double quarterlyRegistered = 0;
-      double annualRegistered = 0;
+      double totalAchieved = 0;
+      double monthlyAchieved = 0;
+      double quarterlyAchieved = 0;
+      double annualAchieved = 0;
 
       final now = DateTime.now();
       final currentMonth = now.month;
@@ -585,38 +665,41 @@ class SaleService {
 
       for (final deal in deals) {
         final dealAmount = (deal['deal_amount'] ?? 0).toDouble();
+        final dealStatus = (deal['deal_status'] ?? '').toString().toLowerCase();
         final dealDate = deal['created_at'] != null
             ? DateTime.parse(deal['created_at'])
             : now;
 
-        // Count ALL deals regardless of status
-        totalRegistered += dealAmount;
+        // Only count deals with status 'negotiation' or 'won'
+        if (dealStatus == 'negotiation' || dealStatus == 'won') {
+          totalAchieved += dealAmount;
 
-        // Check if deal is from current year
-        if (dealDate.year == currentYear) {
-          annualRegistered += dealAmount;
+          // Check if deal is from current year
+          if (dealDate.year == currentYear) {
+            annualAchieved += dealAmount;
 
-          // Check if deal is from current quarter
-          final dealQuarter = ((dealDate.month - 1) / 3).floor() + 1;
-          if (dealQuarter == currentQuarter) {
-            quarterlyRegistered += dealAmount;
-          }
+            // Check if deal is from current quarter
+            final dealQuarter = ((dealDate.month - 1) / 3).floor() + 1;
+            if (dealQuarter == currentQuarter) {
+              quarterlyAchieved += dealAmount;
+            }
 
-          // Check if deal is from current month
-          if (dealDate.month == currentMonth) {
-            monthlyRegistered += dealAmount;
+            // Check if deal is from current month
+            if (dealDate.month == currentMonth) {
+              monthlyAchieved += dealAmount;
+            }
           }
         }
       }
 
       final result = {
-        'total': totalRegistered,
-        'monthly': monthlyRegistered,
-        'quarterly': quarterlyRegistered,
-        'annual': annualRegistered,
+        'total': totalAchieved,
+        'monthly': monthlyAchieved,
+        'quarterly': quarterlyAchieved,
+        'annual': annualAchieved,
       };
 
-      print('Member all registered sales: $result');
+      print('Member achieved sales (negotiation + won): $result');
       return result;
     } catch (e) {
       print('Error loading member achieved sales: $e');

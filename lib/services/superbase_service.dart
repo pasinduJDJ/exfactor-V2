@@ -727,7 +727,7 @@ class SupabaseService {
     }
   }
 
-  // Calculate achieved sales for a user
+  // Calculate achieved sales for a user (negotiation + won deals only)
   static Future<Map<String, double>> calculateUserAchievedSales(
       String userId) async {
     try {
@@ -745,12 +745,10 @@ class SupabaseService {
 
       for (final deal in deals) {
         final dealAmount = (deal['deal_amount'] ?? 0).toDouble();
-        final dealStatus = deal['deal_status'] ?? '';
+        final dealStatus = (deal['deal_status'] ?? '').toString().toLowerCase();
 
-        // Only count closed/won deals
-        if (dealStatus.toLowerCase() == 'closed' ||
-            dealStatus.toLowerCase() == 'won' ||
-            dealStatus.toLowerCase() == 'completed') {
+        // Count negotiation + won deals (new achievement logic)
+        if (dealStatus == 'negotiation' || dealStatus == 'won') {
           totalAchieved += dealAmount;
 
           // Check if deal is from current year

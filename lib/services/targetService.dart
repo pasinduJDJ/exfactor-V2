@@ -20,33 +20,39 @@ class TargetService {
     }
   }
 
-  // Get total company revenue from all deals
-  static Future<double> getTotalCompanyRevenue() async {
+  // Get total company achieved revenue from achieved deals only (negotiation + won)
+  static Future<double> getTotalCompanyAchievedRevenue() async {
     try {
       final deals = await _client
           .from('deals')
-          .select('deal_amount')
+          .select('deal_amount, deal_status')
           .not('deal_amount', 'is', null);
 
       double totalRevenue = 0.0;
       for (var deal in deals) {
         if (deal['deal_amount'] != null) {
-          totalRevenue += (deal['deal_amount'] as num).toDouble();
+          final dealStatus =
+              (deal['deal_status'] ?? '').toString().toLowerCase();
+          // Only count deals with status 'negotiation' or 'won'
+          if (dealStatus == 'negotiation' || dealStatus == 'won') {
+            totalRevenue += (deal['deal_amount'] as num).toDouble();
+          }
         }
       }
 
+      print('Total achieved revenue (negotiation + won): $totalRevenue');
       return totalRevenue;
     } catch (e) {
-      print('Error calculating total revenue: $e');
+      print('Error calculating total achieved revenue: $e');
       return 0.0;
     }
   }
 
-  // Calculate company progress percentage
+  // Calculate company progress percentage based on achieved deals only
   static Future<Map<String, dynamic>> calculateCompanyProgress() async {
     try {
       final target = await getCompanyTarget();
-      final currentRevenue = await getTotalCompanyRevenue();
+      final currentRevenue = await getTotalCompanyAchievedRevenue();
 
       if (target == null) {
         return {
@@ -60,6 +66,9 @@ class TargetService {
       final targetAmount = (target['annual_amount'] as num?)?.toDouble() ?? 0.0;
       final progressPercentage =
           targetAmount > 0 ? (currentRevenue / targetAmount) : 0.0;
+
+      print(
+          'Company Progress - Target: $targetAmount, Achieved: $currentRevenue, Progress: ${(progressPercentage * 100).toStringAsFixed(1)}%');
 
       return {
         'hasTarget': true,

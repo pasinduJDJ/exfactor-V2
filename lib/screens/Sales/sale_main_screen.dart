@@ -39,7 +39,7 @@ class _SalesMainScreenState extends State<SalesMainScreen> {
     ),
     BottomNavigationBarItem(
       icon: Icon(Icons.track_changes),
-      label: 'Tasks',
+      label: 'Deals',
     ),
     BottomNavigationBarItem(
       icon: Icon(Icons.notifications),

@@ -15,6 +15,7 @@ class SalesHomeScreen extends StatefulWidget {
 class _SalesHomeScreenState extends State<SalesHomeScreen> {
   Map<String, dynamic>? userAssignedTargets;
   Map<String, double>? userAchievedSales;
+  Map<String, double>? userPipelineDeals;
   bool isLoading = true;
   String? currentUserId;
 
@@ -32,15 +33,21 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
       final assignedTargets = await SaleService.getCurrentUserAssignedTargets();
       print('Assigned targets: $assignedTargets');
 
-      // Get all registered sales for current user using SaleService (ALL deals)
-      final allRegisteredSales =
-          await SaleService.getCurrentUserAllRegisteredSales();
-      print('All registered sales: $allRegisteredSales');
+      // Get achieved sales (negotiation + won deals only) for progress calculation
+      final achievedSales = await SaleService.getCurrentUserAchievedSales();
+      print('Achieved sales (negotiation + won): $achievedSales');
+
+      // Get pipeline deals (all deals except won and lost) for pipeline display
+      final pipelineDeals = await SaleService.getCurrentUserPipelineDeals();
+      print(
+          'Pipeline deals (interested + ready_for_demo + proposal + negotiation): $pipelineDeals');
 
       setState(() {
         userAssignedTargets = assignedTargets;
         userAchievedSales =
-            allRegisteredSales; // Use ALL deals for progress tracking
+            achievedSales; // Use achieved sales for progress calculation
+        userPipelineDeals =
+            pipelineDeals; // Use pipeline deals for pipeline display
         isLoading = false;
       });
     } catch (e) {
@@ -324,7 +331,7 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      "Deal:",
+                      "Achieved:",
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -373,14 +380,23 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
 
   Widget _buildSalesAnalysisCard() {
     final monthlyTarget = _getCurrentMonthTarget();
+
+    // Get pipeline deals (all deals except won and lost)
+    final monthlyPipeline = userPipelineDeals?['monthly'] ?? 0;
+
+    // Get achieved sales (negotiation + won) for remaining calculation
     final monthlyAchieved = userAchievedSales?['monthly'] ?? 0;
+
+    // Remaining = Target - Achieved (not Target - Pipeline)
     final remainingSales = monthlyTarget - monthlyAchieved;
 
     // Debug prints to verify calculations
     print('=== Sales Analysis Card Debug ===');
     print('Monthly Target: $monthlyTarget');
-    print('Monthly Achieved: $monthlyAchieved');
-    print('Remaining Sales: $remainingSales');
+    print(
+        'Monthly Pipeline (interested + ready_for_demo + proposal + negotiation): $monthlyPipeline');
+    print('Monthly Achieved (negotiation + won): $monthlyAchieved');
+    print('Remaining Sales (Target - Achieved): $remainingSales');
     print('================================');
 
     return Container(
@@ -413,10 +429,9 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
 
           // Sales metrics
           _buildSalesMetric(
-              "Sales Target:", formatCurrency(monthlyTarget), false),
+              "Current Pipe Line :", formatCurrency(monthlyPipeline), false),
           const SizedBox(height: 8),
-          _buildSalesMetric(
-              "Registered Sales:", formatCurrency(monthlyAchieved), false),
+          _buildSalesMetric("Target:", formatCurrency(monthlyTarget), false),
           const SizedBox(height: 8),
           _buildSalesMetric(
               "Remaining Sales:", formatCurrency(remainingSales), true),

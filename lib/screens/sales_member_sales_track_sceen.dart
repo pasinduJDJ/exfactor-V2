@@ -560,7 +560,7 @@ class _DealListWidgetState extends State<_DealListWidget> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Prospect Name: ${deal['prospect_name'] ?? 'N/A'}',
+                              '${deal['prospect_name'] ?? 'N/A'}',
                               style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
@@ -569,7 +569,7 @@ class _DealListWidgetState extends State<_DealListWidget> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Product: ${deal['product'] ?? 'N/A'}',
+                              'Status: ${deal['deal_status'] ?? 'N/A'}',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey[600],

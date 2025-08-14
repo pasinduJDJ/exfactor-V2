@@ -29,10 +29,10 @@ class _AdminCloseDealState extends State<AdminCloseDeal> {
       // Get all deals from the database
       final allDeals = await SupabaseService.getAllDeals();
 
-      // Filter for closed deals (status: closed, won, completed)
+      // Filter for closed deals (status: lost)
       final closedDealsList = allDeals.where((deal) {
         final status = (deal['deal_status'] ?? '').toString().toLowerCase();
-        return status == 'closed' || status == 'won' || status == 'completed';
+        return status == 'lost';
       }).toList();
 
       setState(() {
@@ -108,7 +108,7 @@ class _AdminCloseDealState extends State<AdminCloseDeal> {
           ),
           const SizedBox(height: 16),
           Text(
-            'No closed deals found',
+            'No won deals found',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -118,7 +118,7 @@ class _AdminCloseDealState extends State<AdminCloseDeal> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Closed deals will appear here',
+            'Won deals will appear here',
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey[500],
@@ -257,11 +257,7 @@ class _AdminCloseDealState extends State<AdminCloseDeal> {
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'closed':
-        return cardGreen;
       case 'won':
-        return cardGreen;
-      case 'completed':
         return cardGreen;
       default:
         return Colors.grey;

@@ -68,7 +68,8 @@ class DealService {
         'email': email,
         'website': website,
         'current_solution': currentSolution,
-        'deal_status': dealStatus ?? 'active',
+        'deal_status': dealStatus ??
+            'interested', // Default to 'interested' instead of 'ready_for_demo'
         'created_at': DateTime.now().toIso8601String(),
       };
 
@@ -121,11 +122,11 @@ class DealService {
       final deals =
           await SupabaseService.getDealsByAssignedTargetId(assignedTargetId);
 
-      // Calculate total achieved amount (only closed/won deals)
+      // Calculate total achieved amount (only won deals)
       double totalAchieved = 0;
       for (final deal in deals) {
         final status = (deal['deal_status'] ?? '').toString().toLowerCase();
-        if (status == 'closed' || status == 'won' || status == 'completed') {
+        if (status == 'won') {
           totalAchieved += (deal['deal_amount'] ?? 0).toDouble();
         }
       }
@@ -170,6 +171,53 @@ class DealService {
     } catch (e) {
       print('Error fetching user deals: $e');
       return [];
+    }
+  }
+
+  // Get deals by status for current user
+  static Future<List<Map<String, dynamic>>> getCurrentUserDealsByStatus(
+      String status) async {
+    try {
+      final allDeals = await getCurrentUserDeals();
+      return allDeals.where((deal) {
+        final dealStatus = (deal['deal_status'] ?? '').toString().toLowerCase();
+        return dealStatus == status.toLowerCase();
+      }).toList();
+    } catch (e) {
+      print('Error fetching deals by status: $e');
+      return [];
+    }
+  }
+
+  // Get deal pipeline summary for current user
+  static Future<Map<String, int>> getCurrentUserDealPipelineSummary() async {
+    try {
+      final allDeals = await getCurrentUserDeals();
+      Map<String, int> summary = {
+        'ready_for_demo': 0,
+        'proposal': 0,
+        'negotiation': 0,
+        'won': 0,
+        'lost': 0,
+      };
+
+      for (final deal in allDeals) {
+        final status = (deal['deal_status'] ?? '').toString().toLowerCase();
+        if (summary.containsKey(status)) {
+          summary[status] = (summary[status] ?? 0) + 1;
+        }
+      }
+
+      return summary;
+    } catch (e) {
+      print('Error getting deal pipeline summary: $e');
+      return {
+        'ready_for_demo': 0,
+        'proposal': 0,
+        'negotiation': 0,
+        'won': 0,
+        'lost': 0,
+      };
     }
   }
 
@@ -220,10 +268,10 @@ class DealService {
     List<Map<String, dynamic>> deals,
   ) {
     double totalAmount = 0;
-    double closedAmount = 0;
+    double wonAmount = 0;
     double pendingAmount = 0;
     int totalDeals = deals.length;
-    int closedDeals = 0;
+    int wonDeals = 0;
     int pendingDeals = 0;
 
     for (final deal in deals) {
@@ -232,10 +280,14 @@ class DealService {
 
       totalAmount += amount;
 
-      if (status == 'closed' || status == 'won' || status == 'completed') {
-        closedAmount += amount;
-        closedDeals++;
+      if (status == 'won') {
+        wonAmount += amount;
+        wonDeals++;
+      } else if (status == 'lost') {
+        // Lost deals don't count towards won amount but are still counted
+        pendingDeals++;
       } else {
+        // All other statuses (ready_for_demo, proposal, negotiation) are pending
         pendingAmount += amount;
         pendingDeals++;
       }
@@ -243,12 +295,12 @@ class DealService {
 
     return {
       'total_amount': totalAmount,
-      'closed_amount': closedAmount,
+      'won_amount': wonAmount,
       'pending_amount': pendingAmount,
       'total_deals': totalDeals.toDouble(),
-      'closed_deals': closedDeals.toDouble(),
+      'won_deals': wonDeals.toDouble(),
       'pending_deals': pendingDeals.toDouble(),
-      'success_rate': totalDeals > 0 ? (closedDeals / totalDeals) * 100 : 0,
+      'success_rate': totalDeals > 0 ? (wonDeals / totalDeals) * 100 : 0,
     };
   }
 
@@ -387,15 +439,36 @@ class DealService {
   }) {
     Map<String, String?> errors = {};
 
+    // Debug logging
+    print('=== DealService Validation Debug ===');
+    print('Prospect Name: "$prospectName"');
+    print('Deal Size: "$dealSize"');
+    print('Product: "$product"');
+    print('City: "$city"');
+    print('Country: "$country"');
+    print('Phone: "$phone"');
+    print('Mobile: "$mobile"');
+    print('Email: "$email"');
+    print('Website: "$website"');
+    print('Current Solution: "$currentSolution"');
+
     // Validate prospect name
     if (prospectName.trim().isEmpty) {
       errors['prospectName'] = 'Prospect name is required';
     }
 
     // Validate deal size
-    final amount = double.tryParse(dealSize);
+    // Clean the deal size string by removing commas and spaces before parsing
+    final cleanDealSize = dealSize.replaceAll(RegExp(r'[,\s]'), '');
+    final amount = double.tryParse(cleanDealSize);
+    print('Clean Deal Size: "$cleanDealSize"');
+    print('Parsed Amount: $amount');
     if (amount == null || amount <= 0) {
       errors['dealSize'] = 'Please enter a valid deal amount';
+      print('Deal Size Validation Failed: amount is null or <= 0');
+    } else if (amount < 1000) {
+      errors['dealSize'] = 'Deal size must be at least LKR 1,000.00';
+      print('Deal Size Validation Failed: amount is below minimum (1000)');
     }
 
     // Validate product
@@ -440,6 +513,9 @@ class DealService {
           'Current solution should be at least 3 characters';
     }
 
+    print('Validation Errors: $errors');
+    print('===============================');
+
     return errors;
   }
 
@@ -462,38 +538,101 @@ class DealService {
   // Get deal status options
   static List<String> getDealStatusOptions() {
     return [
-      'active',
+      'interested',
+      'ready_for_demo',
+      'proposal',
+      'negotiation',
       'won',
-      'closed',
+      'lost',
     ];
   }
 
   // Get deal status display names
   static Map<String, String> getDealStatusDisplayNames() {
     return {
-      'active': 'Active',
+      'interested': 'Interested',
+      'ready_for_demo': 'Ready for Demo',
+      'proposal': 'Proposal',
+      'negotiation': 'Negotiation',
       'won': 'Won',
-      'closed': 'Closed',
+      'lost': 'Lost',
     };
   }
 
-  // Get total closed deals count (for admin dashboard)
-  static Future<int> getTotalClosedDealsCount() async {
+  // Get total won deals count (for admin dashboard)
+  static Future<int> getTotalWonDealsCount() async {
     try {
       final allDeals = await SupabaseService.getAllDeals();
 
-      int closedDealsCount = 0;
+      int wonDealsCount = 0;
       for (final deal in allDeals) {
         final status = (deal['deal_status'] ?? '').toString().toLowerCase();
-        if (status == 'closed' || status == 'won' || status == 'completed') {
-          closedDealsCount++;
+        if (status == 'won') {
+          wonDealsCount++;
         }
       }
 
-      return closedDealsCount;
+      return wonDealsCount;
     } catch (e) {
-      print('Error getting total closed deals count: $e');
+      print('Error getting total won deals count: $e');
       return 0;
     }
+  }
+
+  // Get total lost deals count (for admin dashboard)
+  static Future<int> getTotalLostDealsCount() async {
+    try {
+      final allDeals = await SupabaseService.getAllDeals();
+
+      int lostDealsCount = 0;
+      for (final deal in allDeals) {
+        final status = (deal['deal_status'] ?? '').toString().toLowerCase();
+        if (status == 'lost') {
+          lostDealsCount++;
+        }
+      }
+
+      return lostDealsCount;
+    } catch (e) {
+      print('Error getting total lost deals count: $e');
+      return 0;
+    }
+  }
+
+  // Validate deal status transition
+  static bool isValidStatusTransition(String currentStatus, String newStatus) {
+    // Define valid transitions for the 5-stage pipeline
+    final validTransitions = {
+      'interested': ['ready_for_demo', 'lost'],
+      'ready_for_demo': ['proposal', 'lost'],
+      'proposal': ['negotiation', 'lost'],
+      'negotiation': ['won', 'lost'],
+      'won': [], // Won deals cannot transition to other statuses
+      'lost': [], // Lost deals cannot transition to other statuses
+    };
+
+    final current = currentStatus.toLowerCase();
+    final next = newStatus.toLowerCase();
+
+    // Check if the transition is valid
+    if (validTransitions.containsKey(current)) {
+      return validTransitions[current]!.contains(next);
+    }
+
+    return false;
+  }
+
+  // Get next possible statuses for a given current status
+  static List<String> getNextPossibleStatuses(String currentStatus) {
+    final validTransitions = <String, List<String>>{
+      'interested': ['ready_for_demo', 'lost'],
+      'ready_for_demo': ['proposal', 'lost'],
+      'proposal': ['negotiation', 'lost'],
+      'negotiation': ['won', 'lost'],
+      'won': <String>[],
+      'lost': <String>[],
+    };
+
+    return validTransitions[currentStatus.toLowerCase()] ?? <String>[];
   }
 }

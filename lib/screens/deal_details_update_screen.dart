@@ -57,7 +57,6 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
   // Controllers for each field
   final TextEditingController _prospectNameController = TextEditingController();
   final TextEditingController _dealSizeController = TextEditingController();
-  final TextEditingController _productController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
   final TextEditingController _countryController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
@@ -67,8 +66,170 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
   final TextEditingController _currentSolutionController =
       TextEditingController();
 
+  // Product options for dropdown
+  final List<String> _productOptions = [
+    'Odoo ERP',
+    'Odoo Development',
+    'Odoo Supermarket',
+    'Odoo Pharmacy',
+    'Odoo Restaurant',
+    'Odoo Distribution',
+    'SAP Support',
+    'SalesForce',
+    'WorkHub24',
+    'Hosting & Server',
+    'SMS Gateway',
+    'Payment Gateway',
+    'Mobile Application',
+  ];
+
+  // Selected product
+  String _selectedProduct = 'Odoo ERP';
+
+  // Country options for dropdown
+  final List<String> _countryOptions = [
+    'Sri Lanka',
+    'India',
+    'Pakistan',
+    'Bangladesh',
+    'Nepal',
+    'Maldives',
+    'Afghanistan',
+    'United States',
+    'Canada',
+    'United Kingdom',
+    'Germany',
+    'France',
+    'Italy',
+    'Spain',
+    'Netherlands',
+    'Belgium',
+    'Switzerland',
+    'Austria',
+    'Sweden',
+    'Norway',
+    'Denmark',
+    'Finland',
+    'Australia',
+    'New Zealand',
+    'Japan',
+    'South Korea',
+    'China',
+    'Singapore',
+    'Malaysia',
+    'Thailand',
+    'Vietnam',
+    'Indonesia',
+    'Philippines',
+    'Taiwan',
+    'Hong Kong',
+    'United Arab Emirates',
+    'Saudi Arabia',
+    'Qatar',
+    'Kuwait',
+    'Bahrain',
+    'Oman',
+    'Turkey',
+    'Israel',
+    'Egypt',
+    'South Africa',
+    'Nigeria',
+    'Kenya',
+    'Ghana',
+    'Morocco',
+    'Tunisia',
+    'Brazil',
+    'Argentina',
+    'Chile',
+    'Colombia',
+    'Mexico',
+    'Peru',
+    'Venezuela',
+    'Uruguay',
+    'Paraguay',
+    'Ecuador',
+    'Bolivia',
+    'Russia',
+    'Ukraine',
+    'Poland',
+    'Czech Republic',
+    'Hungary',
+    'Romania',
+    'Bulgaria',
+    'Croatia',
+    'Slovenia',
+    'Slovakia',
+    'Estonia',
+    'Latvia',
+    'Lithuania',
+    'Ireland',
+    'Portugal',
+    'Greece',
+    'Cyprus',
+    'Malta',
+    'Luxembourg',
+    'Iceland',
+    'Greenland',
+    'Fiji',
+    'Papua New Guinea',
+    'Solomon Islands',
+    'Vanuatu',
+    'New Caledonia',
+    'French Polynesia',
+    'Samoa',
+    'Tonga',
+    'Kiribati',
+    'Tuvalu',
+    'Nauru',
+    'Palau',
+    'Marshall Islands',
+    'Micronesia',
+    'Guam',
+    'Northern Mariana Islands',
+    'American Samoa',
+    'Cook Islands',
+    'Niue',
+    'Tokelau',
+    'Wallis and Futuna',
+    'Pitcairn Islands',
+    'Easter Island',
+    'Galapagos Islands',
+    'Falkland Islands',
+    'South Georgia',
+    'Bouvet Island',
+    'Heard Island',
+    'McDonald Islands',
+    'Kerguelen Islands',
+    'Crozet Islands',
+    'Prince Edward Islands',
+    'Gough Island',
+    'Tristan da Cunha',
+    'Saint Helena',
+    'Ascension Island',
+    'Bermuda',
+    'Cayman Islands',
+    'Turks and Caicos Islands',
+    'British Virgin Islands',
+    'Anguilla',
+    'Montserrat',
+    'Saint Kitts and Nevis',
+    'Antigua and Barbuda',
+    'Dominica',
+    'Saint Lucia',
+    'Saint Vincent and the Grenadines',
+    'Grenada',
+    'Barbados',
+    'Trinidad and Tobago',
+    'Guyana',
+    'Suriname',
+    'French Guiana',
+  ];
+
+  // Selected country
+  String _selectedCountry = 'Sri Lanka';
+
   // Deal status dropdown
-  String _selectedDealStatus = 'active';
+  String _selectedDealStatus = 'interested';
   bool _isSubmitting = false;
 
   @override
@@ -98,20 +259,43 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
       print(
           'Deal Size Controller initialized with: ${_dealSizeController.text}');
 
-      _productController.text = widget.dealData!['product'] ?? '';
+      // Handle product selection - check if existing product is in our options
+      final existingProduct = widget.dealData!['product'] ?? '';
+      if (_productOptions.contains(existingProduct)) {
+        _selectedProduct = existingProduct;
+      } else {
+        // If existing product is not in our options, set default and log warning
+        _selectedProduct = 'Odoo ERP';
+        print(
+            'Warning: Existing product "$existingProduct" not found in dropdown options. Using default: $_selectedProduct');
+      }
+
       _cityController.text = widget.dealData!['city'] ?? '';
-      _countryController.text = widget.dealData!['country'] ?? '';
+
+      // Handle country selection - check if existing country is in our options
+      final existingCountry = widget.dealData!['country'] ?? '';
+      if (_countryOptions.contains(existingCountry)) {
+        _selectedCountry = existingCountry;
+      } else {
+        // If existing country is not in our options, set default and log warning
+        _selectedCountry = 'Sri Lanka';
+        print(
+            'Warning: Existing country "$existingCountry" not found in dropdown options. Using default: $_selectedCountry');
+      }
+
       _phoneController.text = widget.dealData!['phone_number'] ?? '';
       _mobileController.text = widget.dealData!['mobile_number'] ?? '';
       _emailController.text = widget.dealData!['email'] ?? '';
       _websiteController.text = widget.dealData!['website'] ?? '';
       _currentSolutionController.text =
           widget.dealData!['current_solution'] ?? '';
-      _selectedDealStatus = widget.dealData!['deal_status'] ?? 'active';
+      _selectedDealStatus =
+          _mapOldStatusToNew(widget.dealData!['deal_status'] ?? 'interested');
 
       print('Deal ID: ${widget.dealData!['id']}');
       print('Prospect Name: ${widget.dealData!['prospect_name']}');
       print('Deal Amount: ${widget.dealData!['deal_amount']}');
+      print('Selected Product: $_selectedProduct');
       print('========================');
     } else {
       print('No deal data provided');
@@ -123,9 +307,7 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
   void dispose() {
     _prospectNameController.dispose();
     _dealSizeController.dispose();
-    _productController.dispose();
     _cityController.dispose();
-    _countryController.dispose();
     _phoneController.dispose();
     _mobileController.dispose();
     _emailController.dispose();
@@ -166,9 +348,9 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
         prospectName: _prospectNameController.text.trim(),
         dealSize:
             parsedDealSize.toString(), // Pass as string number without commas
-        product: _productController.text.trim(),
+        product: _selectedProduct,
         city: _cityController.text.trim(),
-        country: _countryController.text.trim(),
+        country: _selectedCountry,
         phone: _phoneController.text.trim(),
         mobile: _mobileController.text.trim(),
         email: _emailController.text.trim(),
@@ -218,9 +400,9 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
         dealId: widget.dealData!['id'],
         prospectName: _prospectNameController.text.trim(),
         dealSize: _parseFormattedNumber(_dealSizeController.text.trim()),
-        product: _productController.text.trim(),
+        product: _selectedProduct,
         city: _cityController.text.trim(),
-        country: _countryController.text.trim(),
+        country: _selectedCountry,
         phone: _phoneController.text.trim(),
         mobile: _mobileController.text.trim(),
         email: _emailController.text.trim(),
@@ -301,9 +483,9 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
             children: [
               _buildTextField('Prospect Name', _prospectNameController),
               _buildFormattedNumberField('Deal Size', _dealSizeController),
-              _buildTextField('Product', _productController),
+              _buildProductDropdown(),
               _buildTextField('City', _cityController),
-              _buildTextField('Country', _countryController),
+              _buildCountryDropdown(),
               _buildTextField('Phone Number', _phoneController,
                   keyboardType: TextInputType.phone),
               _buildTextField('Mobile Number', _mobileController,
@@ -384,6 +566,9 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
   }
 
   Widget _buildDealStatusDropdown() {
+    // Show all available statuses for maximum flexibility
+    final allStatuses = DealService.getDealStatusOptions();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -404,11 +589,47 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
             child: DropdownButton<String>(
               value: _selectedDealStatus,
               isExpanded: true,
-              items: DealService.getDealStatusOptions().map((String status) {
+              items: allStatuses.map((String status) {
+                final displayName =
+                    DealService.getDealStatusDisplayNames()[status] ?? status;
+                final icon = _getStatusIcon(status);
+                final color = _getStatusColor(status);
+                final isCurrentStatus = status == _selectedDealStatus;
+
                 return DropdownMenuItem<String>(
                   value: status,
-                  child: Text(DealService.getDealStatusDisplayNames()[status] ??
-                      status),
+                  child: Row(
+                    children: [
+                      Icon(icon, color: color, size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          displayName,
+                          style: TextStyle(
+                            color: color,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      if (isCurrentStatus)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            'Current',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey.shade700,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 );
               }).toList(),
               onChanged: (String? newValue) {
@@ -421,7 +642,99 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
             ),
           ),
         ),
+        const SizedBox(height: 8),
+        // Show helpful info
       ],
+    );
+  }
+
+  // Helper method to get status icon
+  IconData _getStatusIcon(String status) {
+    switch (status) {
+      case 'interested':
+        return Icons.favorite;
+      case 'ready_for_demo':
+        return Icons.play_circle;
+      case 'proposal':
+        return Icons.description;
+      case 'negotiation':
+        return Icons.handshake;
+      case 'won':
+        return Icons.check_circle;
+      case 'lost':
+        return Icons.cancel;
+      default:
+        return Icons.circle;
+    }
+  }
+
+  // Helper method to get status color
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'interested':
+        return kPrimaryColor;
+      case 'ready_for_demo':
+        return kPrimaryColor;
+      case 'proposal':
+        return kPrimaryColor;
+      case 'negotiation':
+        return kPrimaryColor;
+      case 'won':
+        return kPrimaryColor;
+      case 'lost':
+        return kPrimaryColor;
+      default:
+        return kPrimaryColor;
+    }
+  }
+
+  // Build pipeline step indicator
+  Widget _buildPipelineStep(String number, String label, bool isActive) {
+    return Expanded(
+      child: Column(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: isActive ? Colors.blue : Colors.grey.shade300,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                number,
+                style: TextStyle(
+                  color: isActive ? Colors.white : Colors.grey.shade600,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 10,
+              color: isActive ? Colors.blue.shade700 : Colors.grey.shade600,
+              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Build pipeline arrow
+  Widget _buildPipelineArrow() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Icon(
+        Icons.arrow_forward,
+        color: Colors.grey.shade400,
+        size: 16,
+      ),
     );
   }
 
@@ -433,6 +746,28 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
       return '${date.day}/${date.month}/${date.year}';
     } catch (e) {
       return 'N/A';
+    }
+  }
+
+  // Helper method to map old statuses to new ones
+  String _mapOldStatusToNew(String oldStatus) {
+    switch (oldStatus.toLowerCase()) {
+      case 'interested':
+      case 'ready_for_demo':
+      case 'proposal':
+      case 'negotiation':
+      case 'won':
+      case 'lost':
+        return oldStatus.toLowerCase();
+      case 'active':
+      case 'in_progress':
+      case 'pending':
+        return 'interested'; // Map old active statuses to interested
+      case 'closed':
+      case 'completed':
+        return 'won'; // Map old closed statuses to won
+      default:
+        return 'interested'; // Fallback to default status
     }
   }
 
@@ -518,6 +853,108 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
               }
               return null;
             },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProductDropdown() {
+    // Safety check: ensure selected product is in the options list
+    if (!_productOptions.contains(_selectedProduct)) {
+      _selectedProduct = 'Odoo ERP';
+      print(
+          'Safety check: Reset invalid product selection to default: $_selectedProduct');
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Product',
+            style: const TextStyle(fontSize: 14, color: Colors.black87),
+          ),
+          const SizedBox(height: 4),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _selectedProduct,
+                isExpanded: true,
+                items: _productOptions.map((String product) {
+                  return DropdownMenuItem<String>(
+                    value: product,
+                    child: Text(product),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      _selectedProduct = newValue;
+                    });
+                  }
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCountryDropdown() {
+    // Safety check: ensure selected country is in the options list
+    if (!_countryOptions.contains(_selectedCountry)) {
+      _selectedCountry = 'Sri Lanka';
+      print(
+          'Safety check: Reset invalid country selection to default: $_selectedCountry');
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Country',
+            style: const TextStyle(fontSize: 14, color: Colors.black87),
+          ),
+          const SizedBox(height: 4),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _selectedCountry,
+                isExpanded: true,
+                items: _countryOptions.map((String country) {
+                  return DropdownMenuItem<String>(
+                    value: country,
+                    child: Text(country),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      _selectedCountry = newValue;
+                    });
+                  }
+                },
+              ),
+            ),
           ),
         ],
       ),
