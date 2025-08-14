@@ -207,6 +207,13 @@ class SupabaseService {
     await _client.from('task').update(data).eq('task_id', task.taskId!);
   }
 
+  // Update just the status of a task
+  static Future<void> updateTaskStatus(int taskId, String newStatus) async {
+    await _client
+        .from('task')
+        .update({'status': newStatus}).eq('task_id', taskId);
+  }
+
   // DELETE TASK
   static Future<void> deleteTask(int taskId) async {
     await _client.from('task').delete().eq('task_id', taskId);

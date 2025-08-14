@@ -174,7 +174,7 @@ class _TechnicalSingleTaskState extends State<TechnicalSingleTask> {
                         height: 20,
                       ),
                       CustomButton(
-                        text: "Request Status Update",
+                        text: "Update Task Status",
                         width: double.infinity,
                         backgroundColor: kPrimaryColor,
                         onPressed: () => _showStatusRequestDialog(context),
@@ -192,7 +192,7 @@ class _TechnicalSingleTaskState extends State<TechnicalSingleTask> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text('Request Status Change'),
+          title: const Text('Update Task Status'),
           content: DropdownButtonFormField<String>(
             value: selectedStatus,
             items: statuses
@@ -216,7 +216,7 @@ class _TechnicalSingleTaskState extends State<TechnicalSingleTask> {
                 Navigator.of(ctx).pop();
                 await _submitStatusRequest(selectedStatus!);
               },
-              child: const Text('Submit'),
+              child: const Text('Update'),
             ),
           ],
         );
@@ -231,9 +231,15 @@ class _TechnicalSingleTaskState extends State<TechnicalSingleTask> {
       }
       final taskId = int.tryParse(task!['task_id'].toString());
       if (taskId == null) throw Exception('Task ID not found');
-      await SupabaseService.insertStatusRequest(taskId, _memberId!, status);
+
+      // Directly update the task status instead of creating a status request
+      await SupabaseService.updateTaskStatus(taskId, status);
+
+      // Refresh the task data to show updated status
+      await fetchTask();
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Status change request submitted!')),
+        SnackBar(content: Text('Task status updated to: $status')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
