@@ -3,6 +3,7 @@ import 'package:exfactor/utils/colors.dart';
 import 'deal_details_update_screen.dart';
 import 'package:exfactor/services/dealService.dart';
 import 'package:exfactor/utils/constants.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DealDetails extends StatefulWidget {
   final Map<String, dynamic>? dealData;
@@ -38,7 +39,7 @@ class _DealDetailsState extends State<DealDetails> {
         'product': widget.dealData!['product'] ?? 'N/A',
         'createdDate': _formatDate(widget.dealData!['created_at']),
         'salesPerson':
-            'Current User', // We can get this from user data if needed
+            'Loading...', // Will be updated with actual sales person name
         'legacySystem': widget.dealData!['current_solution'] ?? 'N/A',
       };
 
@@ -54,6 +55,9 @@ class _DealDetailsState extends State<DealDetails> {
       print('Processed deal data: $dealData');
       print('Processed contact data: $contactData');
       print('========================');
+
+      // Load sales person name asynchronously
+      _loadSalesPersonName();
     } else {
       // Fallback to sample data if no deal data provided
       dealData = {
@@ -106,6 +110,70 @@ class _DealDetailsState extends State<DealDetails> {
     return statusMap[status.toLowerCase()] ?? status;
   }
 
+  // Load sales person name from user_id in deal data
+  Future<void> _loadSalesPersonName() async {
+    try {
+      if (widget.dealData != null && widget.dealData!['user_id'] != null) {
+        final userId = widget.dealData!['user_id'] as String;
+        print('Loading sales person name for user ID: $userId');
+
+        // Try to get user data using direct Supabase query since getUserById has issues
+        // The user_id in deals table should map to the user table
+        final response = await Supabase.instance.client
+            .from('user')
+            .select('first_name, last_name')
+            .eq('user_id', userId) // Try user_id first
+            .maybeSingle();
+
+        Map<String, dynamic>? userData = response;
+
+        // If user_id doesn't work, try with id field
+        if (userData == null) {
+          print('Trying with id field...');
+          final response2 = await Supabase.instance.client
+              .from('user')
+              .select('first_name, last_name')
+              .eq('id', userId)
+              .maybeSingle();
+          userData = response2;
+        }
+
+        if (userData != null) {
+          final firstName = userData['first_name'] ?? '';
+          final lastName = userData['last_name'] ?? '';
+          final salesPersonName = '$firstName $lastName'.trim();
+
+          if (salesPersonName.isNotEmpty) {
+            setState(() {
+              dealData['salesPerson'] = salesPersonName;
+            });
+            print('✅ Sales person name loaded: $salesPersonName');
+          } else {
+            setState(() {
+              dealData['salesPerson'] = 'Unknown User';
+            });
+            print('⚠️ Sales person name is empty, showing "Unknown User"');
+          }
+        } else {
+          setState(() {
+            dealData['salesPerson'] = 'User Not Found';
+          });
+          print('❌ User not found for ID: $userId');
+        }
+      } else {
+        print('⚠️ No user_id found in deal data');
+        setState(() {
+          dealData['salesPerson'] = 'No Sales Person';
+        });
+      }
+    } catch (e) {
+      print('❌ Error loading sales person name: $e');
+      setState(() {
+        dealData['salesPerson'] = 'Error Loading';
+      });
+    }
+  }
+
   // Fetch latest deal data from database
   Future<void> _refreshDealData() async {
     if (widget.dealData != null && widget.dealData!['id'] != null) {
@@ -126,6 +194,9 @@ class _DealDetailsState extends State<DealDetails> {
           setState(() {
             _initializeData();
           });
+
+          // Reload sales person name with fresh data
+          await _loadSalesPersonName();
 
           print('UI refreshed with updated data');
         } else {
@@ -261,7 +332,7 @@ class _DealDetailsState extends State<DealDetails> {
                   ),
               ],
             );
-          }).toList(),
+          }),
         ],
       ),
     );
@@ -300,7 +371,7 @@ class _DealDetailsState extends State<DealDetails> {
                   ),
               ],
             );
-          }).toList(),
+          }),
         ],
       ),
     );
