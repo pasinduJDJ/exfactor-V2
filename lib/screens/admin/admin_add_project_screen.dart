@@ -336,14 +336,8 @@ class _AdminAddProjectScreenState extends State<AdminAddProjectScreen> {
               const SizedBox(height: 8),
               _buildTextField(_emailController, 'Enter Contact Email'),
               const SizedBox(height: 8),
-              _buildTextField(_mobileController, 'Enter Contact  Mobile number',
-                  keyboardType: TextInputType.phone, validator: (val) {
-                if (val == null || val.isEmpty) return 'Required';
-                final mobileRegex = RegExp(r'^(?:7|0|(?:\+94))[0-9]{9,10}$');
-                if (!mobileRegex.hasMatch(val))
-                  return 'Enter a valid mobile number';
-                return null;
-              }),
+              _buildTextField(
+                  _mobileController, 'Enter Contact  Mobile number'),
               const SizedBox(height: 8),
               const Text('Select Country'),
               DropdownButtonFormField<String>(

@@ -579,6 +579,53 @@ class DealService {
     }
   }
 
+  // Get total won deals AMOUNT (sum of deal_amount where status == 'won')
+  static Future<double> getTotalWonDealsAmount() async {
+    try {
+      final allDeals = await SupabaseService.getAllDeals();
+
+      double wonDealsAmount = 0.0;
+      for (final deal in allDeals) {
+        final status = (deal['deal_status'] ?? '').toString().toLowerCase();
+        if (status == 'won') {
+          wonDealsAmount += (deal['deal_amount'] ?? 0).toDouble();
+        }
+      }
+
+      return wonDealsAmount;
+    } catch (e) {
+      print('Error getting total won deals amount: $e');
+      return 0.0;
+    }
+  }
+
+  // Get company pipeline amount: sum of deal_amount where status is NOT 'won' or 'lost'
+  // and is one of: interested, ready_for_demo, proposal, negotiation
+  static Future<double> getCompanyPipelineAmount() async {
+    try {
+      final allDeals = await SupabaseService.getAllDeals();
+      const pipelineStatuses = {
+        'interested',
+        'ready_for_demo',
+        'proposal',
+        'negotiation',
+      };
+
+      double pipelineAmount = 0.0;
+      for (final deal in allDeals) {
+        final status = (deal['deal_status'] ?? '').toString().toLowerCase();
+        if (pipelineStatuses.contains(status)) {
+          pipelineAmount += (deal['deal_amount'] ?? 0).toDouble();
+        }
+      }
+
+      return pipelineAmount;
+    } catch (e) {
+      print('Error getting company pipeline amount: $e');
+      return 0.0;
+    }
+  }
+
   // Get total lost deals count (for admin dashboard)
   static Future<int> getTotalLostDealsCount() async {
     try {

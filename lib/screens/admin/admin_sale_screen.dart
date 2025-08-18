@@ -1,6 +1,8 @@
 import 'package:exfactor/screens/admin/admin_add_new_target.dart';
 import 'package:exfactor/screens/admin/admin_update_target.dart';
 import 'package:exfactor/screens/sales_member_sales_track_sceen.dart';
+import 'package:exfactor/services/dealService.dart';
+import 'package:exfactor/services/targetService.dart';
 import 'package:flutter/material.dart';
 import 'package:exfactor/utils/colors.dart';
 import 'package:exfactor/widgets/common/custom_button.dart';
@@ -19,15 +21,21 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
   List<Map<String, dynamic>> salesTeamMembers = [];
   bool isLoading = true;
   bool isLoadingSalesData = true;
+  bool isLoadingClosedDeals = true;
+  bool isLoadingPipeline = true;
 
   // Company sales data
   Map<String, dynamic>? companySalesProgress;
+  double? totalWonDealsAmount;
+  double? totalPipelineAmount;
 
   @override
   void initState() {
     super.initState();
     fetchSalesTeamMembers();
     fetchCompanySalesData();
+    fetchClosedDeals();
+    fetchPipelineAmount();
   }
 
   Future<void> fetchSalesTeamMembers() async {
@@ -40,6 +48,39 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
       });
     } catch (e) {
       setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> fetchClosedDeals() async {
+    setState(() {
+      isLoadingClosedDeals = true;
+    });
+    try {
+      // Sum of deal_amount for all deals with status == 'won'
+      final closedDeals = await DealService.getTotalWonDealsAmount();
+      setState(() {
+        totalWonDealsAmount = closedDeals;
+        isLoadingClosedDeals = false;
+      });
+    } catch (e) {
+      setState(() => isLoadingClosedDeals = false);
+    }
+  }
+
+  Future<void> fetchPipelineAmount() async {
+    setState(() {
+      isLoadingPipeline = true;
+    });
+    try {
+      final amount = await DealService.getCompanyPipelineAmount();
+      setState(() {
+        totalPipelineAmount = amount;
+        isLoadingPipeline = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoadingPipeline = false;
+      });
     }
   }
 
@@ -67,7 +108,9 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 15),
+        padding: EdgeInsets.symmetric(
+          horizontal: MediaQuery.of(context).size.width * 0.04,
+        ),
         child: Column(
           children: [
             // Section 1: Monthly Sales Card
@@ -96,10 +139,13 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
       children: [
         const SizedBox(height: 16),
         SizedBox(
-          height: 400,
+          height: MediaQuery.of(context).size.height * 0.5,
           child: ListView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 4),
+            shrinkWrap: true,
+            physics: const BouncingScrollPhysics(),
+            clipBehavior: Clip.none,
             children: [
               _buildSalesCard(
                 title: "Annual Sales",
@@ -111,6 +157,7 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
                 color: cardDarkRed,
                 cardWidth: 200,
                 isLoading: isLoadingSalesData,
+                wonDealsAmount: (totalWonDealsAmount ?? 0),
               ),
               const SizedBox(width: 16),
               _buildSalesCard(
@@ -124,6 +171,7 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
                 color: cardYellow,
                 cardWidth: 200,
                 isLoading: isLoadingSalesData,
+                wonDealsAmount: (totalWonDealsAmount ?? 0),
               ),
               const SizedBox(width: 16),
               _buildSalesCard(
@@ -137,6 +185,7 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
                 color: cardDarkGreen,
                 cardWidth: 200,
                 isLoading: isLoadingSalesData,
+                wonDealsAmount: (totalWonDealsAmount ?? 0),
               ),
             ],
           ),
@@ -153,10 +202,15 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
     required Color color,
     required double cardWidth,
     required bool isLoading,
+    required double wonDealsAmount,
   }) {
+    // Calculate progress based on won deals amount vs target
+    final targetAmount =
+        double.tryParse(targetValue.replaceAll(RegExp(r'[^\d.]'), '')) ?? 0;
+    final actualProgress =
+        targetAmount > 0 ? (wonDealsAmount / targetAmount) * 100 : 0.0;
     return Container(
-      height: 720,
-      width: 340,
+      width: MediaQuery.of(context).size.width * 0.85,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -170,6 +224,7 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
         ],
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             title,
@@ -181,17 +236,15 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
             textAlign: TextAlign.center,
           ),
 
-          const SizedBox(height: 16),
-
           SizedBox(
-            height: 220,
+            height: 250,
             child: Stack(
               alignment: Alignment.center,
               children: [
                 // Background circle with gradient
                 Container(
-                  width: 180,
-                  height: 180,
+                  width: 200,
+                  height: 200,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: LinearGradient(
@@ -211,11 +264,11 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
                 else
                   // Beautiful progress circle with gradient
                   SizedBox(
-                    width: 180,
-                    height: 180,
+                    width: 200,
+                    height: 200,
                     child: CustomPaint(
                       painter: RoundedProgressPainter(
-                        progress: percentage / 100,
+                        progress: actualProgress / 100,
                         strokeWidth: 30,
                         backgroundColor: Colors.grey[200]!,
                         progressColor: color,
@@ -225,8 +278,8 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
 
                 // Inner circle for depth effect
                 Container(
-                  width: 140,
-                  height: 140,
+                  width: 150,
+                  height: 150,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: Colors.white,
@@ -247,9 +300,9 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      "${formatWithCommas(percentage, decimals: 1)}%",
+                      "${formatWithCommas(actualProgress, decimals: 1)}%",
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: color,
                       ),
@@ -259,11 +312,9 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
             ),
           ),
 
-          const SizedBox(height: 16),
-
           // Values with improved styling
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
@@ -280,7 +331,7 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
                     const Text(
                       "Target sales:",
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 14,
                         fontWeight: FontWeight.w500,
                         color: Colors.grey,
                       ),
@@ -288,29 +339,52 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
                     Text(
                       targetValue,
                       style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.black,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  //Closed deals mean Deal status == won
                   children: [
                     const Text(
-                      "Achieve Sales:",
+                      "Closed Deal:",
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 14,
                         fontWeight: FontWeight.w500,
                         color: Colors.grey,
                       ),
                     ),
                     Text(
-                      dealValue,
+                      _formatCurrency(totalWonDealsAmount ?? 0),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "Current PipeLine:",
                       style: TextStyle(
                         fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    Text(
+                      _formatCurrency(totalPipelineAmount ?? 0),
+                      style: TextStyle(
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: color,
                       ),
@@ -358,19 +432,6 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
           width: double.infinity,
           height: 48,
           icon: const Icon(Icons.check),
-        ),
-        const SizedBox(height: 12),
-        CustomButton(
-          text: "Refresh Data",
-          onPressed: () {
-            fetchCompanySalesData();
-            fetchSalesTeamMembers();
-          },
-          textColor: Color.fromARGB(255, 0, 0, 0),
-          backgroundColor: Color.fromARGB(255, 255, 255, 255),
-          width: double.infinity,
-          height: 48,
-          icon: const Icon(Icons.refresh),
         ),
       ],
     );

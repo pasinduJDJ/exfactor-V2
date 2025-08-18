@@ -11,9 +11,9 @@ class ProjectService {
       for (final project in allProjects) {
         final status = (project['status'] ?? '').toString().toLowerCase();
         print('Project: ${project['title']} - Status: $status');
-        if (status == 'On Progress' ||
-            status == 'Progress' ||
-            status == 'In Progress') {
+        if (status == 'on progress' ||
+            status == 'progress' ||
+            status == 'in progress') {
           liveProjectsCount++;
           print(' Counted as live project: ${project['title']}');
         }
@@ -57,7 +57,7 @@ class ProjectService {
       for (final project in allProjects) {
         final status = (project['status'] ?? '').toString().toLowerCase();
 
-        if (status == 'On Progress' ||
+        if (status == 'on progress' ||
             status == 'progress' ||
             status == 'in progress') {
           liveProjects++;

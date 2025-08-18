@@ -46,7 +46,7 @@ class _AdminHomeState extends State<AdminHome> {
       final revenueProgress = await TargetService.calculateCompanyProgress();
 
       // Fetch closed deals count (lost deals)
-      final closedDeals = await DealService.getTotalLostDealsCount();
+      final closedDeals = await DealService.getTotalWonDealsCount();
 
       // Fetch live projects count
       final liveProjects = await ProjectService.getTotalLiveProjectsCount();

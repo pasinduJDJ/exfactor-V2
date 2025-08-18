@@ -29,10 +29,10 @@ class _AdminCloseDealState extends State<AdminCloseDeal> {
       // Get all deals from the database
       final allDeals = await SupabaseService.getAllDeals();
 
-      // Filter for closed deals (status: lost)
+      // Filter for closed deals (status: won)
       final closedDealsList = allDeals.where((deal) {
         final status = (deal['deal_status'] ?? '').toString().toLowerCase();
-        return status == 'lost';
+        return status == 'won';
       }).toList();
 
       setState(() {
