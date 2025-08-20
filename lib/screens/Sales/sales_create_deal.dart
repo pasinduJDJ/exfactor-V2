@@ -82,7 +82,7 @@ class _CreateDealState extends State<CreateDeal> {
       TextEditingController();
 
   // Auto-generated fields (read-only)
-  String _dealStatus = 'interested';
+  String _dealStatus = 'Interested';
   DateTime _createdAt = DateTime.now();
 
   bool _isSubmitting = false;

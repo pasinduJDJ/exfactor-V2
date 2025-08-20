@@ -4,6 +4,7 @@ import 'deal_details_update_screen.dart';
 import 'package:exfactor/services/dealService.dart';
 import 'package:exfactor/utils/constants.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:exfactor/utils/string_utils.dart';
 
 class DealDetails extends StatefulWidget {
   final Map<String, dynamic>? dealData;
@@ -27,10 +28,6 @@ class _DealDetailsState extends State<DealDetails> {
 
   void _initializeData() {
     if (widget.dealData != null) {
-      // Debug print to verify deal data
-      print('=== Deal Details Debug ===');
-      print('Received deal data: ${widget.dealData}');
-
       // Use real deal data from database
       dealData = {
         'prospectName': widget.dealData!['prospect_name'] ?? 'N/A',
@@ -40,7 +37,7 @@ class _DealDetailsState extends State<DealDetails> {
         'createdDate': _formatDate(widget.dealData!['created_at']),
         'salesPerson':
             'Loading...', // Will be updated with actual sales person name
-        'legacySystem': widget.dealData!['current_solution'] ?? 'N/A',
+        'LegacySystem': widget.dealData!['current_solution'] ?? 'N/A',
       };
 
       contactData = {
@@ -51,10 +48,6 @@ class _DealDetailsState extends State<DealDetails> {
         'email': widget.dealData!['email'] ?? 'N/A',
         'website': widget.dealData!['website'] ?? 'N/A',
       };
-
-      print('Processed deal data: $dealData');
-      print('Processed contact data: $contactData');
-      print('========================');
 
       // Load sales person name asynchronously
       _loadSalesPersonName();
@@ -107,7 +100,9 @@ class _DealDetailsState extends State<DealDetails> {
       'cancelled': 'Cancelled',
     };
 
-    return statusMap[status.toLowerCase()] ?? status;
+    final lower = status.toLowerCase();
+    return statusMap[lower] ??
+        StringUtils.capitalizeFirst(lower, fallback: 'N/A');
   }
 
   // Load sales person name from user_id in deal data
@@ -178,14 +173,9 @@ class _DealDetailsState extends State<DealDetails> {
   Future<void> _refreshDealData() async {
     if (widget.dealData != null && widget.dealData!['id'] != null) {
       try {
-        print('=== Refreshing Deal Data ===');
-        print('Deal ID: ${widget.dealData!['id']}');
-
         final updatedDealData =
             await DealService.getDealById(widget.dealData!['id']);
         if (updatedDealData != null) {
-          print('Fresh data received: $updatedDealData');
-
           // Update the widget's deal data with fresh data from database
           widget.dealData!.clear();
           widget.dealData!.addAll(updatedDealData);
@@ -197,8 +187,6 @@ class _DealDetailsState extends State<DealDetails> {
 
           // Reload sales person name with fresh data
           await _loadSalesPersonName();
-
-          print('UI refreshed with updated data');
         } else {
           print('No updated data received from database');
         }
@@ -422,7 +410,7 @@ class _DealDetailsState extends State<DealDetails> {
       case 'salesPerson':
         return 'Sales Person:';
       case 'legacySystem':
-        return 'legacy System:';
+        return 'Legacy System:';
       case 'country':
         return 'Country:';
       case 'city':

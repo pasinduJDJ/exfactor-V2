@@ -421,10 +421,8 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
               duration: Duration(seconds: 2),
             ),
           );
-          // Wait a moment for the snackbar to show, then pop
           await Future.delayed(const Duration(milliseconds: 500));
-          Navigator.pop(
-              context, true); // Pass true to indicate successful update
+          Navigator.pop(context, true);
         }
       } else {
         print('Failed to update deal');
@@ -493,17 +491,12 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
               _buildTextField('Email', _emailController,
                   keyboardType: TextInputType.emailAddress),
               _buildTextField('Website', _websiteController),
-              _buildTextField('Current Solution', _currentSolutionController),
-
-              // Deal Status Dropdown
+              _buildTextField('Legacy System', _currentSolutionController),
               const SizedBox(height: 16),
               _buildDealStatusDropdown(),
-
-              // Created Date (Read-only)
               const SizedBox(height: 16),
               _buildReadOnlyField(
                   'Created Date', _formatDate(widget.dealData?['created_at'])),
-
               const SizedBox(height: 15),
               CustomButton(
                 text: _isSubmitting ? 'Submitting...' : 'Submit',
@@ -566,7 +559,6 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
   }
 
   Widget _buildDealStatusDropdown() {
-    // Show all available statuses for maximum flexibility
     final allStatuses = DealService.getDealStatusOptions();
 
     return Column(
@@ -643,12 +635,10 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
           ),
         ),
         const SizedBox(height: 8),
-        // Show helpful info
       ],
     );
   }
 
-  // Helper method to get status icon
   IconData _getStatusIcon(String status) {
     switch (status) {
       case 'interested':

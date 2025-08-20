@@ -1,3 +1,4 @@
+import 'package:exfactor/utils/string_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:exfactor/utils/colors.dart';
 import 'package:exfactor/services/saleService.dart';
@@ -21,6 +22,7 @@ class MemberSalesTrack extends StatefulWidget {
 class _MemberSalesTrackState extends State<MemberSalesTrack> {
   Map<String, dynamic>? memberAssignedTargets;
   Map<String, double>? memberAchievedSales;
+  Map<String, double>? memberCurrentPipeline;
   Map<String, List<Map<String, dynamic>>>? memberDealsByPeriod;
   bool isLoading = true;
   late String memberName;
@@ -44,6 +46,10 @@ class _MemberSalesTrackState extends State<MemberSalesTrack> {
       final achievedSales =
           await SaleService.getMemberAchievedSales(widget.memberId);
 
+      // Get member's Current Pipeline sales
+      final currentPipeline =
+          await SaleService.currentPipelineSales(widget.memberId);
+
       // Get member's deals by period
       final dealsByPeriod =
           await SaleService.getMemberDealsByPeriod(widget.memberId);
@@ -51,6 +57,7 @@ class _MemberSalesTrackState extends State<MemberSalesTrack> {
       setState(() {
         memberAssignedTargets = assignedTargets;
         memberAchievedSales = achievedSales;
+        memberCurrentPipeline = currentPipeline;
         memberDealsByPeriod = dealsByPeriod;
         isLoading = false;
       });
@@ -173,12 +180,16 @@ class _MemberSalesTrackState extends State<MemberSalesTrack> {
     final quarterlyAchieved = memberAchievedSales?['quarterly'] ?? 0;
     final monthlyAchieved = memberAchievedSales?['monthly'] ?? 0;
 
+    final annualcurrentPipeline = memberCurrentPipeline?['annual'] ?? 0;
+    final quarterlycurrentPipeline = memberCurrentPipeline?['quarterly'] ?? 0;
+    final monthlycurrentPipeline = memberCurrentPipeline?['monthly'] ?? 0;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 16),
         SizedBox(
-          height: 400,
+          height: 420,
           child: ListView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -188,6 +199,7 @@ class _MemberSalesTrackState extends State<MemberSalesTrack> {
                 percentage: _calculateProgress(annualAchieved, annualTarget),
                 achievedValue: _formatCurrency(annualAchieved),
                 targetValue: _formatCurrency(annualTarget),
+                pipelineValue: _formatCurrency(annualcurrentPipeline),
                 color: cardDarkRed,
                 cardWidth: 200,
               ),
@@ -198,6 +210,7 @@ class _MemberSalesTrackState extends State<MemberSalesTrack> {
                     _calculateProgress(quarterlyAchieved, quarterlyTarget),
                 achievedValue: _formatCurrency(quarterlyAchieved),
                 targetValue: _formatCurrency(quarterlyTarget),
+                pipelineValue: _formatCurrency(quarterlycurrentPipeline),
                 color: cardYellow,
                 cardWidth: 200,
               ),
@@ -207,6 +220,7 @@ class _MemberSalesTrackState extends State<MemberSalesTrack> {
                 percentage: _calculateProgress(monthlyAchieved, monthlyTarget),
                 achievedValue: _formatCurrency(monthlyAchieved),
                 targetValue: _formatCurrency(monthlyTarget),
+                pipelineValue: _formatCurrency(monthlycurrentPipeline),
                 color: cardDarkGreen,
                 cardWidth: 200,
               ),
@@ -222,6 +236,7 @@ class _MemberSalesTrackState extends State<MemberSalesTrack> {
     required double percentage,
     required String achievedValue,
     required String targetValue,
+    required String pipelineValue,
     required Color color,
     required double cardWidth,
   }) {
@@ -344,7 +359,29 @@ class _MemberSalesTrackState extends State<MemberSalesTrack> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      "Achieved Sales:",
+                      "Benchmark",
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    Text(
+                      targetValue,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "Revenue",
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -366,7 +403,7 @@ class _MemberSalesTrackState extends State<MemberSalesTrack> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      "Target Sales:",
+                      "Booked",
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -374,11 +411,11 @@ class _MemberSalesTrackState extends State<MemberSalesTrack> {
                       ),
                     ),
                     Text(
-                      targetValue,
-                      style: const TextStyle(
+                      pipelineValue,
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: color,
                       ),
                     ),
                   ],
@@ -543,7 +580,8 @@ class _DealListWidgetState extends State<_DealListWidget> {
                 },
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 5),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
                     color: Colors.grey[50],
@@ -569,10 +607,19 @@ class _DealListWidgetState extends State<_DealListWidget> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Status: ${deal['deal_status'] ?? 'N/A'}',
+                              "Status: ${StringUtils.capitalizeFirst(deal['deal_status']?.toString() ?? 'N/A')}",
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${deal['created_at'] ?? 'N/A'}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black,
                               ),
                             ),
                           ],

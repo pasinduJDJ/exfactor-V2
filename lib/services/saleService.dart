@@ -67,11 +67,9 @@ class SaleService {
       // Get achieved sales for current user (negotiation + won deals only)
       final achievedSales =
           await SupabaseService.calculateUserAchievedSales(currentUserId);
-      print('Achieved sales (negotiation + won): $achievedSales');
 
       return achievedSales;
     } catch (e) {
-      print('Error loading user achieved sales: $e');
       return _getDefaultAchievedSales();
     }
   }
@@ -120,7 +118,7 @@ class SaleService {
         final dealStatus = (deal['deal_status'] ?? '').toString().toLowerCase();
 
         // Count all deals EXCEPT lost deals (pipeline deals)
-        if (dealStatus != 'lost') {
+        if (dealStatus != 'won' || dealStatus != 'lost') {
           totalPipeline += dealAmount;
 
           // Check if deal is from current year
@@ -244,15 +242,55 @@ class SaleService {
       Map<String, dynamic>? userAssignedTargets) {
     if (userAssignedTargets == null) return 0;
 
-    final monthlyTargets = userAssignedTargets['monthly_targets'] as List;
+    // Monthly targets can sometimes come with 'month' as String or int.
+    final monthlyTargets =
+        (userAssignedTargets['monthly_targets'] as List?) ?? const [];
     final currentMonth = DateTime.now().month;
 
-    final currentMonthTarget = monthlyTargets.firstWhere(
-      (target) => target['month'] == currentMonth,
-      orElse: () => {'target_amount': 0},
-    );
+    Map<String, dynamic>? match;
+    for (final t in monthlyTargets) {
+      final raw = t['month'];
+      final monthAsInt = raw is int ? raw : int.tryParse(raw?.toString() ?? '');
+      if (monthAsInt == currentMonth) {
+        match = Map<String, dynamic>.from(t);
+        break;
+      }
+    }
 
-    return (currentMonthTarget['target_amount'] ?? 0).toDouble();
+    final fromMonthly =
+        (match != null ? (match['target_amount'] ?? 0) : 0).toDouble();
+    if (fromMonthly > 0) return fromMonthly;
+
+    // Fallback 1: derive from quarterly assignment for current quarter
+    final assignedTarget = userAssignedTargets['assigned_target'] ?? {};
+    final q = ((DateTime.now().month - 1) / 3).floor() + 1;
+    double fromQuarter = 0;
+    switch (q) {
+      case 1:
+        fromQuarter =
+            (assignedTarget['assigned_amount_q1'] ?? 0).toDouble() / 3;
+        break;
+      case 2:
+        fromQuarter =
+            (assignedTarget['assigned_amount_q2'] ?? 0).toDouble() / 3;
+        break;
+      case 3:
+        fromQuarter =
+            (assignedTarget['assigned_amount_q3'] ?? 0).toDouble() / 3;
+        break;
+      case 4:
+        fromQuarter =
+            (assignedTarget['assigned_amount_q4'] ?? 0).toDouble() / 3;
+        break;
+      default:
+        fromQuarter = 0;
+    }
+    if (fromQuarter > 0) return fromQuarter;
+
+    // Fallback 2: derive from annual assignment
+    final fromAnnual =
+        (assignedTarget['assigned_amount_annual'] ?? 0).toDouble() / 12;
+    return fromAnnual;
   }
 
   // Get current quarter's target from assigned targets
@@ -671,7 +709,88 @@ class SaleService {
             : now;
 
         // Only count deals with status 'negotiation' or 'won'
-        if (dealStatus == 'negotiation' || dealStatus == 'won') {
+        if (dealStatus == 'won') {
+          totalAchieved += dealAmount;
+
+          // Check if deal is from current year
+          if (dealDate.year == currentYear) {
+            annualAchieved += dealAmount;
+
+            // Check if deal is from current quarter
+            final dealQuarter = ((dealDate.month - 1) / 3).floor() + 1;
+            if (dealQuarter == currentQuarter) {
+              quarterlyAchieved += dealAmount;
+            }
+
+            // Check if deal is from current month
+            if (dealDate.month == currentMonth) {
+              monthlyAchieved += dealAmount;
+            }
+          }
+        }
+      }
+
+      final result = {
+        'total': totalAchieved,
+        'monthly': monthlyAchieved,
+        'quarterly': quarterlyAchieved,
+        'annual': annualAchieved,
+      };
+
+      print('Member achieved sales (negotiation + won): $result');
+      return result;
+    } catch (e) {
+      print('Error loading member achieved sales: $e');
+      return _getDefaultAchievedSales();
+    }
+  }
+
+  // Get specific member's CurrentPipeline sales (without won and lost)
+  static Future<Map<String, double>> currentPipelineSales(
+      String memberId) async {
+    try {
+      int memberIdInt;
+      try {
+        memberIdInt = int.parse(memberId);
+      } catch (e) {
+        print('Invalid member ID format: $memberId');
+        return _getDefaultAchievedSales();
+      }
+
+      final userData = await SupabaseService.getUserByMemberId(memberIdInt);
+      if (userData == null) {
+        print('No user data found for member ID: $memberId');
+        return _getDefaultAchievedSales();
+      }
+
+      final userId = userData['user_id'];
+      print('Member UUID: $userId');
+
+      final deals = await SupabaseService.getDealsByUserId(userId);
+      print('All deals for member: ${deals.length}');
+
+      double totalAchieved = 0;
+      double monthlyAchieved = 0;
+      double quarterlyAchieved = 0;
+      double annualAchieved = 0;
+
+      final now = DateTime.now();
+      final currentMonth = now.month;
+      final currentQuarter = ((currentMonth - 1) / 3).floor() + 1;
+      final currentYear = now.year;
+
+      for (final deal in deals) {
+        final dealAmount = (deal['deal_amount'] ?? 0).toDouble();
+        final dealStatus = (deal['deal_status'] ?? '').toString().toLowerCase();
+        final dealDate = deal['created_at'] != null
+            ? DateTime.parse(deal['created_at'])
+            : now;
+
+        // Only count deals with status 'negotiation' or 'won'
+        if (dealStatus == 'interested' ||
+            dealStatus == 'ready_for_demo' ||
+            dealStatus == 'proposal' ||
+            dealStatus == 'negotiation') {
           totalAchieved += dealAmount;
 
           // Check if deal is from current year

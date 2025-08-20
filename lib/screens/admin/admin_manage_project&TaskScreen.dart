@@ -20,12 +20,12 @@ class AdminProjectManage extends StatefulWidget {
 class _AdminProjectManageState extends State<AdminProjectManage> {
   List<Map<String, dynamic>> statusProjectOverview = [
     {'label': 'PENDING', 'count': 0, 'color': kWhite},
-    {'label': 'ON PROGRESS', 'count': 0, 'color': kWhite},
+    {'label': 'In PROGRESS', 'count': 0, 'color': kWhite},
     {'label': 'OVER DUE', 'count': 0, 'color': cardRed},
   ];
   List<Map<String, dynamic>> statusTaskOverView = [
     {'label': 'PENDING', 'count': 0, 'color': kWhite},
-    {'label': 'ON PROGRESS', 'count': 0, 'color': kWhite},
+    {'label': 'In PROGRESS', 'count': 0, 'color': kWhite},
     {'label': 'OVER DUE', 'count': 0, 'color': cardRed},
   ];
 
@@ -130,7 +130,7 @@ class _AdminProjectManageState extends State<AdminProjectManage> {
         if (endDate != null && endDate.isBefore(now)) {
           overdue++;
           print(
-              'Project overview: ${p['title']} -> OVERDUE (On Progress but past end date)');
+              'Project overview: ${p['title']} -> OVERDUE (In Progress but past end date)');
         } else {
           onProgress++;
           print('Project overview: ${p['title']} -> IN PROGRESS');
@@ -149,7 +149,7 @@ class _AdminProjectManageState extends State<AdminProjectManage> {
     setState(() {
       statusProjectOverview = [
         {'label': 'PENDING', 'count': pending, 'color': kWhite},
-        {'label': 'On Progress', 'count': onProgress, 'color': kWhite},
+        {'label': 'In Progress', 'count': onProgress, 'color': kWhite},
         {'label': 'OVER DUE', 'count': overdue, 'color': cardRed},
         // Optionally add complete count here if you want to show it in the UI
         // {'label': 'COMPLETE', 'count': complete, 'color': Colors.blue},
@@ -202,7 +202,7 @@ class _AdminProjectManageState extends State<AdminProjectManage> {
         if (endDate != null && endDate.isBefore(now)) {
           overdue++;
           print(
-              'Task overview: ${t['title'] ?? 'No Title'} -> OVERDUE (On Progress but past end date)');
+              'Task overview: ${t['title'] ?? 'No Title'} -> OVERDUE (In Progress but past end date)');
         } else {
           onProgress++;
           print('Task overview: ${t['title'] ?? 'No Title'} -> IN PROGRESS');
@@ -221,7 +221,7 @@ class _AdminProjectManageState extends State<AdminProjectManage> {
     setState(() {
       statusTaskOverView = [
         {'label': 'PENDING', 'count': pending, 'color': kWhite},
-        {'label': 'On Progress', 'count': onProgress, 'color': kWhite},
+        {'label': 'In Progress', 'count': onProgress, 'color': kWhite},
         {'label': 'OVER DUE', 'count': overdue, 'color': cardRed},
         // Optionally add complete count here if you want to show it in the UI
         // {'label': 'COMPLETE', 'count': complete, 'color': Colors.blue},
@@ -527,7 +527,7 @@ class _AdminProjectManageState extends State<AdminProjectManage> {
               ),
               // In Progress Project Table list  Start
               UserUtils.buildExpandableGroup(
-                title: "On Progress Project",
+                title: "In Progress Project",
                 color: cardDarkGreen,
                 expanded: showProjectProgress,
                 onToggle: () =>
@@ -668,9 +668,9 @@ class _AdminProjectManageState extends State<AdminProjectManage> {
               const SizedBox(
                 height: 20,
               ),
-              // on Progress Task Table
+              // In Progress Task Table
               UserUtils.buildExpandableGroup(
-                title: "On Progress Task",
+                title: "In Progress Task",
                 color: cardDarkGreen,
                 expanded: showTaskProgress,
                 onToggle: () =>

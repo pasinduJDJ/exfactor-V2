@@ -225,16 +225,7 @@ class _AdminSingleProjectScreenState extends State<AdminSingleProjectScreen> {
                               height: 15,
                             ),
                             CustomButton(
-                              text: "In Archive Project",
-                              icon: Icon(Icons.remove_red_eye),
-                              onPressed: () => _archiveProject(context),
-                              backgroundColor: primaryColor,
-                            ),
-                            const SizedBox(
-                              height: 10,
-                            ),
-                            CustomButton(
-                              text: "Update Project",
+                              text: "Update",
                               backgroundColor: primaryColor,
                               icon: Icon(Icons.edit_document),
                               onPressed: () async {
@@ -249,7 +240,16 @@ class _AdminSingleProjectScreenState extends State<AdminSingleProjectScreen> {
                                 fetchProject();
                               },
                             ),
-                            const SizedBox(height: 15),
+                            const SizedBox(height: 10),
+                            CustomButton(
+                              text: "Archive",
+                              icon: Icon(Icons.remove_red_eye),
+                              onPressed: () => _archiveProject(context),
+                              backgroundColor: primaryColor,
+                            ),
+                            const SizedBox(
+                              height: 10,
+                            ),
                             UserUtils.buildExpandableGroup(
                               title: "${project!['title']} ",
                               color: kPrimaryColor,

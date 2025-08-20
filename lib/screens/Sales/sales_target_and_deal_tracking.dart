@@ -6,6 +6,7 @@ import 'package:exfactor/services/dealService.dart';
 import 'sales_create_deal.dart';
 import '../deal_deatils_screen.dart';
 import 'package:exfactor/utils/constants.dart';
+import 'package:exfactor/utils/string_utils.dart';
 
 class SalesTaskScreen extends StatefulWidget {
   const SalesTaskScreen({super.key});
@@ -30,51 +31,37 @@ class _SalesTaskScreenState extends State<SalesTaskScreen> {
     setState(() => isLoading = true);
 
     try {
-      // Get assigned targets for current user using SaleService
       final assignedTargets = await SaleService.getCurrentUserAssignedTargets();
-      print('Assigned targets: $assignedTargets');
 
-      // Get achieved sales (negotiation + won deals only) using SaleService
       final achievedSales = await SaleService.getCurrentUserAchievedSales();
-      print('Achieved sales (negotiation + won): $achievedSales');
 
-      // Get pipeline deals (all deals except lost) using SaleService
       final pipelineDeals = await SaleService.getCurrentUserPipelineDeals();
-      print('Pipeline deals (all except lost): $pipelineDeals');
 
-      // Get latest deals for current user using DealService
       final deals = await DealService.getCurrentUserDeals();
-      print('Latest deals: $deals');
 
       setState(() {
         userAssignedTargets = assignedTargets;
-        userAchievedSales =
-            achievedSales; // Use achieved sales (negotiation + won)
+        userAchievedSales = achievedSales;
         latestDeals = deals;
         isLoading = false;
       });
     } catch (e) {
-      print('Error loading user data: $e');
       setState(() => isLoading = false);
     }
   }
 
-  // Calculate progress percentage using SaleService
   double _calculateProgress(double achieved, double target) {
     return SaleService.calculateProgress(achieved, target);
   }
 
-  // Get current month's target using SaleService
   double _getCurrentMonthTarget() {
     return SaleService.getCurrentMonthTarget(userAssignedTargets);
   }
 
-  // Get current quarter's target using SaleService
   double _getCurrentQuarterTarget() {
     return SaleService.getCurrentQuarterTarget(userAssignedTargets);
   }
 
-  // Get annual target using SaleService
   double _getAnnualTarget() {
     return SaleService.getAnnualTarget(userAssignedTargets);
   }
@@ -91,20 +78,12 @@ class _SalesTaskScreenState extends State<SalesTaskScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   child: Column(
                     children: [
-                      // Section 1: Monthly Sales Analyze Card
                       _buildMonthlySalesAnalyzeCard(),
-
-                      const SizedBox(height: 20),
-
-                      // Section 2: New Deal Register Button
+                      const SizedBox(height: 15),
                       _buildNewDealRegisterButton(context),
-
-                      const SizedBox(height: 20),
-
-                      // Section 3: Latest Registered Deals
+                      const SizedBox(height: 15),
                       _buildLatestRegisteredDealsCard(),
-
-                      const SizedBox(height: 30),
+                      const SizedBox(height: 15),
                     ],
                   ),
                 ),
@@ -321,13 +300,13 @@ class _SalesTaskScreenState extends State<SalesTaskScreen> {
           const SizedBox(height: 16),
 
           // Sales metrics
-          _buildSalesMetric("Sales Target:", salesTarget, false),
+          _buildSalesMetric("Benchmark", salesTarget, false),
           const SizedBox(height: 8),
-          _buildSalesMetric("Registered Clients:", registeredClients, false),
+          _buildSalesMetric("Booked Clients", registeredClients, false),
           const SizedBox(height: 8),
-          _buildSalesMetric("Registered Sales:", registeredSales, false),
+          _buildSalesMetric("Booked", registeredSales, false),
           const SizedBox(height: 8),
-          _buildSalesMetric("Remaining Sales:", remainingSales, true),
+          _buildSalesMetric("Remaining", remainingSales, true),
         ],
       ),
     );
@@ -505,7 +484,7 @@ class _SalesTaskScreenState extends State<SalesTaskScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    "Status: ${deal['deal_status'] ?? 'N/A'}",
+                    "Status: ${StringUtils.capitalizeFirst(deal['deal_status']?.toString() ?? 'N/A')}",
                     style: TextStyle(
                       fontSize: 12,
                       color: deal['deal_status'] == 'closed' ||

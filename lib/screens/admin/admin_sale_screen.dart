@@ -329,7 +329,7 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      "Target sales:",
+                      "Benchmark",
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -352,7 +352,7 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
                   //Closed deals mean Deal status == won
                   children: [
                     const Text(
-                      "Closed Deal:",
+                      "Revenue",
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -374,7 +374,7 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      "Current PipeLine:",
+                      "Booked",
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -461,7 +461,7 @@ class _AdminSaleScreenState extends State<AdminSaleScreen> {
         children: [
           // Title
           const Text(
-            "Sales Team members",
+            "Team Performances",
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,

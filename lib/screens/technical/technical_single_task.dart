@@ -187,7 +187,7 @@ class _TechnicalSingleTaskState extends State<TechnicalSingleTask> {
 
   void _showStatusRequestDialog(BuildContext context) async {
     String? selectedStatus;
-    final statuses = ['On Progress', 'Hold', 'Complete'];
+    final statuses = ['In Progress', 'Hold', 'Complete'];
     await showDialog(
       context: context,
       builder: (ctx) {

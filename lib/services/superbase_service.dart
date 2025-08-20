@@ -654,7 +654,6 @@ class SupabaseService {
     }
   }
 
-  // Get deals for a specific user
   static Future<List<Map<String, dynamic>>> getDealsByUserId(
       String userId) async {
     try {
@@ -755,7 +754,7 @@ class SupabaseService {
         final dealStatus = (deal['deal_status'] ?? '').toString().toLowerCase();
 
         // Count negotiation + won deals (new achievement logic)
-        if (dealStatus == 'negotiation' || dealStatus == 'won') {
+        if (dealStatus == 'won') {
           totalAchieved += dealAmount;
 
           // Check if deal is from current year
@@ -787,7 +786,6 @@ class SupabaseService {
         'annual': annualAchieved,
       };
     } catch (e) {
-      print('Error calculating user achieved sales: $e');
       return {
         'total': 0,
         'monthly': 0,

@@ -95,7 +95,7 @@ class _TechnicalHomeState extends State<TechnicalHome> {
         } else if (status == 'complete') {
           complete++;
           completeTasks.add(task);
-        } else if (status == 'on progress' || status == 'progress') {
+        } else if (status == 'in progress' || status == 'on progress') {
           if (endDate != null && endDate.isBefore(now)) {
             overdue++;
             overdueTasks.add(task);
@@ -137,7 +137,7 @@ class _TechnicalHomeState extends State<TechnicalHome> {
   Widget build(BuildContext context) {
     List<Map<String, dynamic>> statusItems = [
       {'label': 'PENDING', 'count': pendingCount, 'color': kWhite},
-      {'label': 'On Progress', 'count': progressCount, 'color': kWhite},
+      {'label': 'In Progress', 'count': progressCount, 'color': kWhite},
       {'label': 'COMPLETE', 'count': completeCount, 'color': kWhite},
       {'label': 'OVER DUE', 'count': overdueCount, 'color': cardRed},
     ];
@@ -176,7 +176,7 @@ class _TechnicalHomeState extends State<TechnicalHome> {
                 ),
           const SizedBox(height: 15),
           UserUtils.buildExpandableGroup(
-            title: 'On Progress Task',
+            title: 'In Progress Task',
             color: cardGreen,
             expanded: showInProgress,
             onToggle: () {

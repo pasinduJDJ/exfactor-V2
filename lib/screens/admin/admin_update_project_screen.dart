@@ -230,7 +230,7 @@ class _AdminUpdateProjectScreenState extends State<AdminUpdateProjectScreen> {
   ];
   static const List<String> _statusOptions = [
     'Pending',
-    'On Progress',
+    'In Progress',
     'Completed',
     'Archived',
   ];

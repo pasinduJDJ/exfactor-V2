@@ -29,49 +29,35 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
     setState(() => isLoading = true);
 
     try {
-      // Get assigned targets for current user using SaleService
       final assignedTargets = await SaleService.getCurrentUserAssignedTargets();
-      print('Assigned targets: $assignedTargets');
 
-      // Get achieved sales (negotiation + won deals only) for progress calculation
       final achievedSales = await SaleService.getCurrentUserAchievedSales();
-      print('Achieved sales (negotiation + won): $achievedSales');
 
-      // Get pipeline deals (all deals except won and lost) for pipeline display
       final pipelineDeals = await SaleService.getCurrentUserPipelineDeals();
-      print(
-          'Pipeline deals (interested + ready_for_demo + proposal + negotiation): $pipelineDeals');
 
       setState(() {
         userAssignedTargets = assignedTargets;
-        userAchievedSales =
-            achievedSales; // Use achieved sales for progress calculation
-        userPipelineDeals =
-            pipelineDeals; // Use pipeline deals for pipeline display
+        userAchievedSales = achievedSales;
+        userPipelineDeals = pipelineDeals;
         isLoading = false;
       });
     } catch (e) {
-      print('Error loading user assigned targets: $e');
       setState(() => isLoading = false);
     }
   }
 
-  // Calculate progress percentage using SaleService
   double _calculateProgress(double achieved, double target) {
     return SaleService.calculateProgress(achieved, target);
   }
 
-  // Get current month's target using SaleService
   double _getCurrentMonthTarget() {
     return SaleService.getCurrentMonthTarget(userAssignedTargets);
   }
 
-  // Get current quarter's target using SaleService
   double _getCurrentQuarterTarget() {
     return SaleService.getCurrentQuarterTarget(userAssignedTargets);
   }
 
-  // Get annual target using SaleService
   double _getAnnualTarget() {
     return SaleService.getAnnualTarget(userAssignedTargets);
   }
@@ -153,19 +139,16 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
     final quarterlyAchieved = userAchievedSales?['quarterly'] ?? 0;
     final monthlyAchieved = userAchievedSales?['monthly'] ?? 0;
 
-    // Debug prints to verify calculations
-    print('=== Sales Home Progress Debug ===');
-    print('Annual Target: $annualTarget, Achieved: $annualAchieved');
-    print('Quarterly Target: $quarterlyTarget, Achieved: $quarterlyAchieved');
-    print('Monthly Target: $monthlyTarget, Achieved: $monthlyAchieved');
-    print('===============================');
+    final annualPipline = userPipelineDeals?['annual'] ?? 0;
+    final quarterlyPipline = userPipelineDeals?['quarterly'] ?? 0;
+    final monthlyPipline = userPipelineDeals?['monthly'] ?? 0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 16),
         SizedBox(
-          height: 400,
+          height: 420,
           child: ListView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -175,6 +158,7 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
                 percentage: _calculateProgress(annualAchieved, annualTarget),
                 dealValue: formatCurrency(annualAchieved),
                 targetValue: formatCurrency(annualTarget),
+                pipelineValue: formatCurrency(annualPipline),
                 color: cardDarkRed,
                 cardWidth: 200,
               ),
@@ -185,6 +169,7 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
                     _calculateProgress(quarterlyAchieved, quarterlyTarget),
                 dealValue: formatCurrency(quarterlyAchieved),
                 targetValue: formatCurrency(quarterlyTarget),
+                pipelineValue: formatCurrency(quarterlyPipline),
                 color: cardYellow,
                 cardWidth: 200,
               ),
@@ -194,6 +179,7 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
                 percentage: _calculateProgress(monthlyAchieved, monthlyTarget),
                 dealValue: formatCurrency(monthlyAchieved),
                 targetValue: formatCurrency(monthlyTarget),
+                pipelineValue: formatCurrency(monthlyPipline),
                 color: cardDarkGreen,
                 cardWidth: 200,
               ),
@@ -209,11 +195,12 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
     required double percentage,
     required String dealValue,
     required String targetValue,
+    required String pipelineValue,
     required Color color,
     required double cardWidth,
   }) {
     return Container(
-      height: 720,
+      height: 820,
       width: 340,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -331,7 +318,29 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      "Achieved:",
+                      "Benchmark",
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    Text(
+                      targetValue,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "Revenue",
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -353,7 +362,7 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      "Target:",
+                      "Booked",
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -361,11 +370,11 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
                       ),
                     ),
                     Text(
-                      targetValue,
-                      style: const TextStyle(
+                      pipelineValue,
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: color,
                       ),
                     ),
                   ],
@@ -381,23 +390,11 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
   Widget _buildSalesAnalysisCard() {
     final monthlyTarget = _getCurrentMonthTarget();
 
-    // Get pipeline deals (all deals except won and lost)
     final monthlyPipeline = userPipelineDeals?['monthly'] ?? 0;
 
-    // Get achieved sales (negotiation + won) for remaining calculation
     final monthlyAchieved = userAchievedSales?['monthly'] ?? 0;
 
-    // Remaining = Target - Achieved (not Target - Pipeline)
     final remainingSales = monthlyTarget - monthlyAchieved;
-
-    // Debug prints to verify calculations
-    print('=== Sales Analysis Card Debug ===');
-    print('Monthly Target: $monthlyTarget');
-    print(
-        'Monthly Pipeline (interested + ready_for_demo + proposal + negotiation): $monthlyPipeline');
-    print('Monthly Achieved (negotiation + won): $monthlyAchieved');
-    print('Remaining Sales (Target - Achieved): $remainingSales');
-    print('================================');
 
     return Container(
       width: double.infinity,
@@ -428,13 +425,11 @@ class _SalesHomeScreenState extends State<SalesHomeScreen> {
           const SizedBox(height: 16),
 
           // Sales metrics
-          _buildSalesMetric(
-              "Current Pipe Line :", formatCurrency(monthlyPipeline), false),
+          _buildSalesMetric("Benchmark", formatCurrency(monthlyTarget), false),
           const SizedBox(height: 8),
-          _buildSalesMetric("Target:", formatCurrency(monthlyTarget), false),
+          _buildSalesMetric("Revenue", formatCurrency(monthlyPipeline), false),
           const SizedBox(height: 8),
-          _buildSalesMetric(
-              "Remaining Sales:", formatCurrency(remainingSales), true),
+          _buildSalesMetric("Remaining ", formatCurrency(remainingSales), true),
         ],
       ),
     );
