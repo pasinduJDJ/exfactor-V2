@@ -118,7 +118,10 @@ class SaleService {
         final dealStatus = (deal['deal_status'] ?? '').toString().toLowerCase();
 
         // Count all deals EXCEPT lost deals (pipeline deals)
-        if (dealStatus != 'won' || dealStatus != 'lost') {
+        if (dealStatus == 'interested' ||
+            dealStatus == 'ready_for_demo' ||
+            dealStatus == 'proposal' ||
+            dealStatus == 'negotiation') {
           totalPipeline += dealAmount;
 
           // Check if deal is from current year

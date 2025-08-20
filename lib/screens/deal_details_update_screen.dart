@@ -375,7 +375,7 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(errorMessage!),
-              backgroundColor: Colors.red,
+              backgroundColor: primaryColor,
             ),
           );
         }
@@ -388,7 +388,7 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Error: Deal data not found. Please try again.'),
-              backgroundColor: Colors.red,
+              backgroundColor: primaryColor,
             ),
           );
         }
@@ -417,7 +417,7 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Data updated successfully!'),
-              backgroundColor: Colors.green,
+              backgroundColor: primaryColor,
               duration: Duration(seconds: 2),
             ),
           );
@@ -430,7 +430,7 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Failed to update deal. Please try again.'),
-              backgroundColor: Colors.red,
+              backgroundColor: primaryColor,
             ),
           );
         }
@@ -441,7 +441,7 @@ class _DealDetailsUpdateState extends State<DealDetailsUpdate> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error updating deal: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: primaryColor,
           ),
         );
       }
